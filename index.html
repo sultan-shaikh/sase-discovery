@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSP SASE Discovery AI — Co-Pilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════ */
+:root {
+  --bg: #0f041c;
+  --s1: #180a2b;
+  --s2: #25103f;
+  --s3: #3b1c61;
+  --s4: #4a287a;
+  --bdr: rgba(183,125,255,.2);
+  --bdra: rgba(183,125,255,.5);
+  --ac: #b77dff; 
+  --acl: rgba(183,125,255,.15); 
+  --acg: linear-gradient(135deg, #b77dff, #e60050);
+  --gn: #00cc88;
+  --gnd: rgba(0,204,136,.12);
+  --am: #ff8c00;
+  --amd: rgba(255,140,0,.12);
+  --rd: #ff3366;
+  --rdd: rgba(255,51,102,.12);
+  --pu: #e60050;
+  --pud: rgba(230,0,80,.12);
+  --cy: #22d3ee;
+  --cyd: rgba(34,211,238,.12);
+  --tx: #f1f5f9;
+  --txm: #94a3b8;
+  --txd: #cbd5e1;
+  --fm: 'Fraunces', Georgia, serif; 
+  --fb: 'DM Sans', sans-serif; 
+  --fc: 'DM Mono', monospace;
+  --pw: 360px; 
+  --rw: 320px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:var(--fb);
+  background-image:radial-gradient(ellipse 60% 30% at 70% -5%,rgba(183,125,255,.08),transparent 60%),
+    radial-gradient(ellipse 40% 20% at 10% 100%,rgba(230,0,80,.05),transparent 50%)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px}
+
+/* ─── HEADER ─── */
+header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;
+  border-bottom:1px solid var(--bdr);background:rgba(15,4,28,.88);backdrop-filter:blur(16px);
+  position:fixed;top:0;left:0;right:0;z-index:200;height:60px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:32px;height:32px;background:var(--acg);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fb);font-size:14px;font-weight:700;color:#fff;box-shadow:0 0 18px rgba(183,125,255,.3)}
+.logo-name{font-family:var(--fm);font-size:18px;font-weight:800;letter-spacing:-.02em}
+.logo-name em{font-style:italic;color:var(--ac)}
+.hdr-c{font-family:var(--fc);font-size:10px;color:var(--txm);letter-spacing:.12em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--am);box-shadow:0 0 8px var(--am);
+  animation:pdot 2s ease-in-out infinite}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.hbtn{display:flex;align-items:center;gap:6px;font-family:var(--fc);font-size:10px;padding:8px 14px;
+  border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--txm);
+  cursor:pointer;transition:all .2s;letter-spacing:.05em;text-transform:uppercase; font-weight:600;}
+.hbtn:hover{border-color:var(--bdra);color:var(--tx);background:var(--s3)}
+.hbtn.hl{border-color:rgba(183,125,255,.4);color:var(--ac);background:var(--acl)}
+.hbtn.hl:hover{background:rgba(183,125,255,.25)}
+
+/* ─── LAYOUT ─── */
+.app{display:grid;grid-template-columns:var(--pw) 1fr var(--rw);height:calc(100vh - 60px);margin-top:60px;overflow:hidden}
+
+/* ─── PANELS ─── */
+.panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--bdr);background:var(--s1);}
+.panel.rp{border-right:none;border-left:1px solid var(--bdr)}
+.ph{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;
+  justify-content:space-between;background:var(--s2);flex-shrink:0}
+.ph-lbl{font-family:var(--fc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--txm)}
+.ph-lbl em{color:var(--ac);font-style:normal}
+.pb{flex:1;overflow-y:auto;padding:20px}
+
+/* ─── FORM ELEMENTS ─── */
+.sec-title{font-family:var(--fc);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--txm);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.ctx-sec{margin-bottom:24px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{margin-bottom:12px}
+.fl{font-family:var(--fc);font-size:9px;color:var(--txm);letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:6px;display:block;font-weight:600;}
+select,input[type=text],input[type=number]{width:100%;background:var(--s2);border:1px solid var(--bdr);
+  border-radius:8px;padding:10px 12px;color:var(--tx);font-family:var(--fb);font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+select{cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:calc(100% - 10px) center;padding-right:28px}
+select:focus,input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acl)}
+select option{background:var(--s2)}
+
+/* Persona pill */
+.persona-wrap{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.persona-icon{width:36px;height:36px;border-radius:10px;background:var(--acg);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+  box-shadow:0 0 15px rgba(183,125,255,.3)}
+.persona-detail{flex:1}
+.persona-role{font-size:13px;font-weight:600;color:var(--tx)}
+.persona-focus{font-family:var(--fc);font-size:9px;color:var(--txm);margin-top:3px}
+
+/* ─── SCORES ─── */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.sc{background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:12px 8px;text-align:center;transition:all .3s}
+.sc.l-ac{border-color:rgba(183,125,255,.4);background:rgba(183,125,255,.08)}
+.sc.l-gn{border-color:rgba(0,204,136,.4);background:rgba(0,204,136,.08)}
+.sc.l-cy{border-color:rgba(230,0,80,.4);background:rgba(230,0,80,.08)}
+.sv{font-family:var(--fm);font-size:22px;font-weight:800;line-height:1;margin-bottom:4px;transition:color .3s}
+.sv.ac{color:var(--ac)}.sv.gn{color:var(--gn)}.sv.cy{color:var(--pu)}
+.sl{font-family:var(--fc);font-size:8px;color:var(--txm);letter-spacing:.1em;text-transform:uppercase}
+.qbw{margin-bottom:8px}
+.qbl{display:flex;justify-content:space-between;font-family:var(--fc);font-size:9px;color:var(--txm);margin-bottom:4px;font-weight:600;}
+.qb{height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.qf{height:100%;border-radius:2px;transition:width .7s cubic-bezier(.34,1.56,.64,1)}
+.qf.ac{background:var(--ac);box-shadow:0 0 6px rgba(183,125,255,.5)}
+.qf.gn{background:var(--gn);box-shadow:0 0 6px rgba(0,204,136,.5)}
+.qf.cy{background:var(--pu);box-shadow:0 0 6px rgba(230,0,80,.5)}
+.verdict{border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.5;margin-top:12px;border:1px solid;display:none}
+.verdict.show{display:block}
+.verdict.vst{background:var(--gnd);border-color:rgba(0,204,136,.3);color:var(--gn)}
+.verdict.vmd{background:var(--acl);border-color:rgba(183,125,255,.3);color:var(--ac)}
+.verdict.vlw{background:var(--amd);border-color:rgba(255,140,0,.3);color:var(--am)}
+.vl{font-family:var(--fc);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;opacity:.8}
+.vt{font-weight:600;font-size:12px}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.tag{padding:3px 8px;border-radius:4px;font-family:var(--fc);font-size:8px;border:1px solid;
+  font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.t-ac{color:var(--ac);border-color:rgba(183,125,255,.3);background:var(--acl)}
+.t-gn{color:var(--gn);border-color:rgba(0,204,136,.3);background:var(--gnd)}
+.t-am{color:var(--am);border-color:rgba(255,140,0,.3);background:var(--amd)}
+.t-rd{color:var(--rd);border-color:rgba(255,51,102,.3);background:var(--rdd)}
+.t-cy{color:var(--cy);border-color:rgba(34,211,238,.3);background:var(--cyd)}
+.t-pu{color:var(--pu);border-color:rgba(230,0,80,.3);background:var(--pud)}
+
+/* ─── TIMELINE ─── */
+.tl{padding-left:16px;position:relative}
+.tl::before{content:'';position:absolute;left:5px;top:6px;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--ac),var(--s3) 80%); border-radius:2px;}
+.tl-item{position:relative;margin-bottom:20px;opacity:.45;transition:opacity .4s}
+.tl-item::before{content:'';position:absolute;left:-15px;top:4px;width:10px;height:10px;
+  border-radius:50%;background:var(--s3);border:2px solid var(--s1);transition:all .4s;z-index:2}
+.tl-item.done{opacity:.85}.tl-item.done::before{background:var(--gn);border-color:var(--gn);box-shadow:0 0 10px rgba(0,204,136,.4)}
+.tl-item.active{opacity:1}.tl-item.active::before{background:var(--ac);border-color:var(--ac);box-shadow:0 0 12px rgba(183,125,255,.5)}
+.tl-cat{font-family:var(--fc);font-size:9px;color:var(--txm);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+.tl-num{font-size:11px;font-weight:700;color:var(--txd);margin-bottom:5px}
+.tl-ans{font-size:12px;color:var(--tx);font-weight:500;line-height:1.5;padding:8px 12px;
+  background:var(--s2);border:1px solid var(--bdr);border-radius:6px}
+.tl-ans.emp{color:var(--txm);font-style:italic;background:transparent;border-style:dashed}
+
+/* ─── WIZARD CENTER ─── */
+.center-p{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative}
+
+/* Start State */
+.start-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;z-index:10;background:var(--bg);}
+.start-icon{width:80px;height:80px;background:var(--s1);border:2px dashed var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:24px;color:var(--ac);box-shadow:0 0 40px var(--acl);}
+.start-title{font-family:var(--fm);font-size:38px;font-weight:800;margin-bottom:12px;color:var(--tx); letter-spacing:-0.02em;}
+.start-desc{color:var(--txm);font-size:16px;line-height:1.6;max-width:480px;margin-bottom:32px;}
+
+.wiz-wrap{max-width:720px;margin:0 auto;width:100%;padding:48px 32px 0;
+  display:flex;flex-direction:column;flex:1;overflow-y:auto; display:none;}
+
+/* Progress */
+.prog-row{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.prog-ring{position:relative;width:56px;height:56px;flex-shrink:0}
+.prog-ring svg{transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:var(--s3);stroke-width:4}
+.ring-fill{fill:none;stroke:var(--ac);stroke-width:4;stroke-linecap:round;
+  stroke-dasharray:150;stroke-dashoffset:150;transition:stroke-dashoffset .6s cubic-bezier(.34,1.2,.64,1)}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fc);font-size:12px;color:var(--ac);font-weight:600}
+.prog-meta{flex:1}
+.prog-cat{font-family:var(--fc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);margin-bottom:4px; font-weight:700;}
+.prog-lbl{font-family:var(--fc);font-size:10px;color:var(--txm)}
+.persona-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;
+  background:var(--acl);border:1px solid rgba(183,125,255,.3);
+  font-family:var(--fc);font-size:9px;color:var(--ac);text-transform:uppercase;letter-spacing:.08em;margin-top:6px; font-weight:600;}
+
+/* Question */
+.wiz-q{font-family:var(--fm);font-size:32px;font-weight:800;color:var(--tx);
+  line-height:1.3;margin-bottom:32px;letter-spacing:-.02em}
+.wiz-opts{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+.opt{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--s1);
+  border:1.5px solid var(--bdr);border-radius:12px;color:var(--tx);font-family:var(--fb);
+  font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;text-align:left;position:relative; overflow:hidden;}
+.opt::before{content:'';position:absolute;inset:0;background:var(--acg);opacity:0;transition:opacity .2s}
+.opt:hover{border-color:var(--bdra);background:var(--s2);transform:translateX(4px)}
+.opt.sel{border-color:var(--ac);background:rgba(183,125,255,.08);transform:translateX(4px); box-shadow:0 4px 20px rgba(183,125,255,.15);}
+.opt-ind{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--txm);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+.opt.sel .opt-ind{background:var(--ac);border-color:var(--ac)}
+.opt-chk{width:8px;height:8px;border-radius:50%;background:#fff;opacity:0;transform:scale(0);transition:all .2s}
+.opt.sel .opt-chk{opacity:1;transform:scale(1)}
+.ob{font-family:var(--fc);font-size:9px;padding:3px 8px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:.05em;font-weight:600;flex-shrink:0}
+.ob-risk{background:var(--rdd);color:var(--rd);border:1px solid rgba(255,51,102,.3)}
+.ob-legacy{background:var(--amd);color:var(--am);border:1px solid rgba(255,140,0,.3)}
+.ob-mature{background:var(--gnd);color:var(--gn);border:1px solid rgba(0,204,136,.3)}
+.ob-driver{background:var(--cyd);color:var(--cy);border:1px solid rgba(34,211,238,.3)}
+.ob-pivot{background:var(--pud);color:var(--pu);border:1px solid rgba(230,0,80,.3)}
+.ob-pain{background:var(--amd);color:var(--am);border:1px solid rgba(255,140,0,.3)}
+
+/* Notes */
+.notes-lbl{font-family:var(--fc);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--txm);margin-bottom:8px;display:block; font-weight:700;}
+textarea{width:100%;background:var(--s1);border:1px dashed var(--bdra);border-radius:10px;
+  padding:14px 18px;color:var(--tx);font-family:var(--fb);font-size:14px;
+  min-height:80px;resize:vertical;outline:none;transition:all .2s}
+textarea:focus{border-style:solid;border-color:var(--ac);box-shadow:0 0 0 3px var(--acl)}
+textarea::placeholder{color:var(--txm)}
+
+/* Footer */
+.wiz-foot{display:flex;justify-content:space-between;align-items:center;
+  padding:24px 0 32px;margin-top:auto;border-top:1px solid var(--bdr)}
+.qdots{display:flex;gap:6px}
+.qdot{width:6px;height:6px;border-radius:50%;background:var(--s3);transition:all .3s}
+.qdot.dn{background:var(--gn)}.qdot.ac2{background:var(--ac);box-shadow:0 0 8px rgba(183,125,255,.6)}
+.foot-r{display:flex;gap:12px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 24px;border-radius:8px;font-family:var(--fb);font-size:14px;
+  font-weight:600;cursor:pointer;border:1.5px solid;transition:all .2s;line-height:1}
+.btn-g{background:transparent;color:var(--txm);border-color:var(--bdr)}
+.btn-g:hover{color:var(--tx);border-color:var(--txm);background:var(--s3)}
+.btn-p{background:var(--s3);color:var(--txm);border-color:var(--bdr)}
+.btn-p:disabled{cursor:not-allowed;opacity:.5}
+.btn-p.rdy{background:var(--acg);color:#fff;border-color:transparent;
+  box-shadow:0 4px 20px rgba(183,125,255,.35);animation:bpulse 2.5s ease-in-out infinite}
+.btn-p.rdy:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(183,125,255,.45);animation:none}
+@keyframes bpulse{0%,100%{box-shadow:0 4px 20px rgba(183,125,255,.35)}50%{box-shadow:0 4px 28px rgba(183,125,255,.6)}}
+.btn-fin{background:transparent;color:var(--gn);border-color:rgba(0,204,136,.3);font-size:13px;padding:10px 18px}
+.btn-fin:hover{background:var(--gnd)}
+
+/* Loading */
+.loading{position:absolute;inset:0;background:rgba(15,4,28,.92);backdrop-filter:blur(8px);
+  z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s}
+.loading.on{opacity:1;pointer-events:all}
+.spin{width:48px;height:48px;border:3px solid rgba(183,125,255,.2);border-top-color:var(--ac);
+  border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading h3{font-family:var(--fm);font-size:24px;margin-bottom:8px; color:var(--tx);}
+.loading p{font-size:14px;color:var(--txm)}
+
+/* ─── RIGHT PANEL: CHEAT SHEET ─── */
+.cs-card{border-radius:10px;padding:18px;margin-bottom:14px;border-left:4px solid;border:1px solid var(--bdr); background:var(--s2);}
+.cs-card.t-ac{border-left-color:var(--ac);}
+.cs-card.t-am{border-left-color:var(--am);}
+.cs-card.t-pu{border-left-color:var(--pu);}
+.cs-card.t-gn{border-left-color:var(--gn);}
+.cs-card.t-rd{border-left-color:var(--rd);}
+.cs-card.t-cy{border-left-color:var(--cy);}
+.cs-title{font-family:var(--fc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;opacity:.8; font-weight:700;}
+.cs-body{font-size:14px;line-height:1.65;color:var(--txm)}
+.cs-body strong{color:var(--tx)}
+
+/* Battlecard */
+.bc{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.bc-hdr{padding:12px 16px;background:var(--s3);display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid var(--bdr)}
+.bc-name{font-family:var(--fc);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx); font-weight:700;}
+.bc-badge{font-family:var(--fc);font-size:8px;padding:3px 8px;border-radius:4px;
+  background:var(--rdd);color:var(--rd);border:1px solid rgba(255,51,102,.3);text-transform:uppercase; font-weight:600;}
+.bc-body{padding:16px}
+.bc-row{display:flex;gap:10px;margin-bottom:12px;font-size:13px;line-height:1.5}
+.bc-row:last-child{margin-bottom:0}
+.bc-ico{font-size:14px;flex-shrink:0;margin-top:1px}
+.bc-txt{color:var(--txm)}.bc-txt strong{color:var(--tx);font-size:12px; display:block; margin-bottom:2px;}
+
+/* ─── REPORT VIEW ─── */
+.rv{display:none;position:fixed;inset:60px 0 0;background:var(--bg);z-index:150;overflow-y:auto}
+.rv.show{display:block}
+.rv-inner{max-width:880px;margin:0 auto;padding:60px 40px 80px}
+.rv-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.rv-eyebrow-line{flex:1;height:1px;background:var(--bdr)}
+.rv-eyebrow-badge{font-family:var(--fc);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gn);padding:5px 14px;border:1px solid rgba(0,204,136,.3);border-radius:20px;white-space:nowrap; font-weight:600;}
+.rv-title{font-family:var(--fm);font-size:42px;font-weight:800;margin-bottom:12px;letter-spacing:-.03em;line-height:1.1}
+.rv-sub{color:var(--txm);font-size:16px;margin-bottom:40px}
+.rv-actions{display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap;align-items:center}
+.rv-actions .btn{font-size:13px;padding:12px 20px}
+.pdf-btn{background:var(--gn);color:#000;border-color:transparent;
+  box-shadow:0 4px 16px rgba(0,204,136,.3);font-size:13px;padding:12px 20px}
+.pdf-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,204,136,.4); background:#00f2a2;}
+
+/* Report sections */
+.rpt-section{background:var(--s1);border:1px solid var(--bdra);border-radius:14px;
+  padding:36px;margin-bottom:24px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.rpt-section-title{font-family:var(--fm);font-size:18px;font-weight:800;color:var(--ac);
+  margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;gap:10px}
+.rpt-section-title::before{content:'';width:4px;height:20px;background:var(--acg);border-radius:2px}
+
+/* Discovery summary table */
+.ds-table{width:100%;border-collapse:collapse}
+.ds-table th{font-family:var(--fc);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txm);padding:12px 16px;text-align:left;border-bottom:1px solid var(--bdr);background:var(--s2)}
+.ds-table td{padding:16px;border-bottom:1px solid var(--bdr);font-size:14px;
+  line-height:1.5;vertical-align:top}
+.ds-table tr:last-child td{border-bottom:none}
+.ds-table .td-q{color:var(--txd);font-size:13px;font-weight:600;width:35%}
+.ds-table .td-cat{font-family:var(--fc);font-size:9px;color:var(--ac);text-transform:uppercase;
+  letter-spacing:.08em;white-space:nowrap; font-weight:700;}
+.ds-table .td-ans{color:var(--tx);font-weight:600}
+.ds-table .td-notes{color:var(--txm);font-size:13px;font-style:italic}
+.ds-row-even{background:rgba(255,255,255,.02)}
+
+/* AI report box */
+.ai-box{font-size:15px;line-height:1.75;color:var(--txd)}
+.ai-box h3{font-family:var(--fm);font-size:20px;font-weight:800;color:var(--ac);
+  margin:32px 0 16px;padding-bottom:10px;border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;gap:10px}
+.ai-box h3:first-child{margin-top:0}
+.ai-box h3::before{content:'';width:4px;height:20px;background:var(--acg);border-radius:2px}
+.ai-box ul{margin-left:24px;margin-bottom:16px}
+.ai-box li{margin-bottom:8px}
+.ai-box strong{color:var(--tx);font-weight:700}
+.ai-box p{margin-bottom:16px}
+
+/* Gen button */
+.gen-wrap{text-align:center;padding:48px 0}
+.gen-btn{background:var(--acg);color:#fff;border:none;padding:16px 36px;
+  font-size:16px;font-family:var(--fb);font-weight:700;border-radius:10px;
+  cursor:pointer;box-shadow:0 8px 26px rgba(183,125,255,.35);transition:all .2s;
+  display:inline-flex;align-items:center;gap:10px}
+.gen-btn:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(183,125,255,.45)}
+.gen-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* ─── INITIAL WELCOME HUB ─── */
+.mdrop{position:fixed;inset:0;background:rgba(15,4,28,0.98);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(20px)}
+.mbox{background:var(--s1);border:1px solid var(--bdr);border-top:3px solid var(--ac);
+  border-radius:16px;width:750px;max-width:95vw;box-shadow:0 50px 120px rgba(0,0,0,.8); overflow:hidden;}
+.m-inner{display:grid;grid-template-columns:1fr 1fr; border-top:1px solid var(--bdr);}
+.m-side{padding:40px; display:flex; flex-direction:column;}
+.m-side.left{border-right:1px solid var(--bdr); background:rgba(255,255,255,0.02);}
+.m-side.right{background:var(--s2); justify-content: space-between;}
+.m-hero{text-align:center;padding:0 40px 40px}
+.m-mark{width:70px;height:70px;background:var(--acg);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:var(--fb);font-weight:700;
+  font-size:24px;color:#fff;margin:0 auto 24px;box-shadow:0 0 40px rgba(183,125,255,0.5)}
+.m-title{font-family:var(--fm);font-size:42px;font-weight:800;margin-bottom:12px;letter-spacing:-.02em}
+.m-sub{color:var(--txm);font-size:16px;line-height:1.6;max-width:480px;margin:0 auto}
+.m-opt-title{font-family:var(--fm); font-size:22px; font-weight:700; margin-bottom:12px; color:var(--tx);}
+.m-opt-desc{font-size:14px; color:var(--txm); line-height:1.5; margin-bottom:24px;}
+.m-lbl{font-family:var(--fc);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--txm);display:block;margin-bottom:8px; font-weight:700;}
+.m-inp{width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:9px;
+  padding:14px 16px;color:var(--tx);font-family:var(--fc);font-size:14px;outline:none;
+  letter-spacing:.04em;transition:all .2s; margin-bottom:16px;}
+.m-inp:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acl)}
+.m-cta{width:100%;padding:18px;background:var(--acg);color:#fff;border:none;
+  border-radius:10px;font-family:var(--fb);font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .2s;box-shadow:0 4px 18px rgba(183,125,255,.3)}
+.m-cta:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(183,125,255,0.5)}
+.m-cta.demo{background:var(--s4); border:1px solid var(--bdra); color:var(--tx); box-shadow:none;}
+.m-cta.demo:hover{background:var(--ac); border-color:var(--ac); color:#fff; box-shadow:0 10px 30px rgba(183,125,255,0.5);}
+
+.hidden{display:none!important}
+
+/* ═══════════════════════════════════════
+   PRINT / PDF STYLES
+═══════════════════════════════════════ */
+@media print {
+  @page{margin:15mm;size:A4}
+  header,.app,.mdrop{display:none!important}
+  .rv{display:block!important;position:static!important;background:#fff!important;overflow:visible!important; padding:0!important;}
+  .rpt-section{background:#fff!important;border:1px solid #ddd!important;box-shadow:none!important;margin-bottom:20px!important;padding:20px!important}
+  .rpt-section-title{color:#6400aa!important}
+  .ds-table td{color:#111!important}
+}
+
+/* Light Mode Overrides */
+body.lm{
+  --bg:#f3f4f7;--s1:#ffffff;--s2:#f8f9fa;--s3:#e2e8f0;--s4:#cbd5e1;
+  --bdr:#d9dce3;--bdra:#6400aa;
+  --ac:#6400aa;--acl:rgba(100,0,170,.08);
+  --gn:#00875a; --gnd:rgba(0,135,90,.1);
+  --am:#d97706; --amd:rgba(217,119,6,.1);
+  --rd:#e60050; --rdd:rgba(230,0,80,.1);
+  --pu:#e60050; --pud:rgba(230,0,80,.1);
+  --tx:#1e1e1e;--txm:#555555;--txd:#333333;
+  background-image:none;
+}
+</style>
+</head>
+<body>
+
+<!-- INITIAL WELCOME HUB -->
+<div class="mdrop hidden" id="welcomeHub">
+  <div class="m-hero">
+    <div class="m-mark">MSP</div>
+    <h1 class="m-title">SASE Discovery AI</h1>
+    <p class="m-sub">The intelligent co-pilot for high-impact enterprise SASE conversations.</p>
+  </div>
+  <div class="mbox">
+    <div class="m-inner">
+      <div class="m-side left">
+        <h2 class="m-opt-title">AI Mode</h2>
+        <p class="m-opt-desc">Harness Gemini 2.0 to generate nuanced, real-time follow-up questions based on the prospect's exact answers and industry.</p>
+        <div class="m-form" style="padding:0;">
+          <label class="m-lbl">Google Gemini API Key</label>
+          <input class="m-inp" type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
+          <button class="m-cta" onclick="saveKey()">Activate Live AI →</button>
+        </div>
+      </div>
+      <div class="m-side right">
+        <div>
+          <h2 class="m-opt-title">Demo Mode</h2>
+          <p class="m-opt-desc">A flawless, pre-scripted 12-question flow. Zero API dependency, perfect for offline leadership presentations or training.</p>
+        </div>
+        <button class="m-cta demo" onclick="bypassKey()">Launch Pre-scripted Demo →</button>
+      </div>
+    </div>
+  </div>
+  <p style="color:var(--txm); font-size:12px; margin-top:32px;">MSP confidential. For internal sales use only.</p>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo"><div class="logo-mark">MSP</div><div class="logo-name">SASE <em>Discovery AI</em></div></div>
+  <div class="hdr-c"><div class="ai-dot" id="aiDot"></div><span id="aiStatus">Locked — Select Mode</span></div>
+  <div class="hdr-r"><button class="hbtn" id="themeBtn" onclick="toggleTheme()">☀ Light Mode</button><button class="hbtn hl" onclick="showModal()">⚙ Change Mode</button></div>
+</header>
+
+<!-- APP -->
+<div class="app" id="appLayout">
+  <!-- LEFT: CONTEXT -->
+  <div class="panel">
+    <div class="ph"><span class="ph-lbl">Deal <em>Context</em></span><span style="font-size:12px;font-weight:700;color:var(--tx);" id="nameLabel"></span></div>
+    <div class="pb">
+      <div class="ctx-sec">
+        <div class="sec-title">1. Target Persona</div>
+        <div class="fg">
+          <select id="persona" onchange="onPersonaChange()">
+            <option value="">Select persona to begin...</option>
+            <option value="CISO">CISO — Chief Information Security Officer</option>
+            <option value="CIO">CIO — Chief Information Officer</option>
+            <option value="IT Director">IT Director</option>
+            <option value="Network Manager">Network Manager / Architect</option>
+            <option value="Security Manager">Security Manager / Engineer</option>
+            <option value="NOC/SOC Analyst">NOC / SOC Analyst</option>
+            <option value="CFO">CFO / Finance Stakeholder</option>
+            <option value="Procurement">Procurement / Vendor Manager</option>
+          </select>
+        </div>
+        <div id="personaCard" style="display:none" class="persona-wrap">
+          <div class="persona-icon" id="personaIcon">👤</div>
+          <div class="persona-detail"><div class="persona-role" id="personaRole"></div><div class="persona-focus" id="personaFocus"></div></div>
+        </div>
+      </div>
+      <div class="ctx-sec">
+        <div class="sec-title">2. Details</div>
+        <div class="fg"><label class="fl">Company Name</label><input type="text" id="pName" placeholder="Barclays UK" oninput="updateCtx()"></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Industry</label>
+            <select id="ind" onchange="updateCtx()">
+              <option value="General Enterprise">Select...</option>
+              <option value="Financial Services">Financial Services</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Manufacturing">Manufacturing</option>
+              <option value="Retail / Logistics">Retail / Logistics</option>
+              <option value="Government / Public Sector">Government / Public Sector</option>
+              <option value="Technology">Technology</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Sites</label><input type="number" id="sites" placeholder="40" oninput="updateCtx()"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Users</label><input type="number" id="users" placeholder="e.g. 2500" oninput="updateCtx()"></div>
+          <div class="fg"><label class="fl">MSP Relationship</label>
+            <select id="btRel" onchange="updateCtx()">
+              <option value="">Select...</option>
+              <option value="new">Net New Logo</option>
+              <option value="underlay">MSP Underlay Customer</option>
+              <option value="security">MSP Security Customer</option>
+              <option value="both">Both Underlay & Security</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg"><label class="fl">Current WAN</label>
+          <select id="net" onchange="updateCtx()">
+            <option value="">Select...</option>
+            <option>MPLS-only</option><option>MPLS + Internet Breakout</option>
+            <option>Legacy SD-WAN (unmanaged)</option><option>Internet-only / VPN</option>
+            <option>Hybrid (MPLS + SD-WAN)</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Security Posture</label>
+          <select id="sec" onchange="updateCtx()">
+            <option value="">Select...</option>
+            <option>Basic (Firewall only)</option><option>Moderate (VPN + IPS)</option>
+            <option>Strong (ZTNA / SSE in place)</option><option>Compliance-driven (PCI / HIPAA)</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Competitor Mentioned</label>
+          <select id="comp" onchange="updateCtx()">
+            <option value="">None yet</option>
+            <option value="Zscaler">Zscaler</option>
+            <option value="Cato Networks">Cato Networks</option>
+            <option value="Palo Alto Prisma">Palo Alto Prisma SASE</option>
+            <option value="Fortinet">Fortinet Secure SD-WAN</option>
+            <option value="Vodafone">Vodafone Managed SASE</option>
+            <option value="Orange">Orange Business SASE</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctx-sec">
+        <div class="sec-title">Opportunity Score</div>
+        <div class="sg">
+          <div class="sc" id="sc-s"><div class="sv ac" id="sv-s">--</div><div class="sl">SASE</div></div>
+          <div class="sc" id="sc-w"><div class="sv gn" id="sv-w">--</div><div class="sl">SD-WAN</div></div>
+          <div class="sc" id="sc-u"><div class="sv cy" id="sv-u">--</div><div class="sl">Underlay</div></div>
+        </div>
+        <div id="bars" style="display:none">
+          <div class="qbw"><div class="qbl"><span>SASE Fit</span><span id="bl-s">0%</span></div><div class="qb"><div class="qf ac" id="bf-s" style="width:0%"></div></div></div>
+          <div class="qbw"><div class="qbl"><span>SD-WAN Fit</span><span id="bl-w">0%</span></div><div class="qb"><div class="qf gn" id="bf-w" style="width:0%"></div></div></div>
+          <div class="qbw"><div class="qbl"><span>Underlay Fit</span><span id="bl-u">0%</span></div><div class="qb"><div class="qf cy" id="bf-u" style="width:0%"></div></div></div>
+        </div>
+        <div class="verdict hidden" id="verdict"><div class="vl">Sales Verdict</div><div class="vt" id="vt"></div></div>
+        <div class="tags" id="ctx-tags"></div>
+      </div>
+      <div class="ctx-sec"><div class="sec-title">Live Storyboard</div><div id="timeline" class="tl"></div></div>
+    </div>
+  </div>
+
+  <!-- CENTER: WIZARD -->
+  <div class="center-p">
+    <div class="loading" id="loader"><div class="spin"></div><h3>Analysing Context…</h3><p id="loaderDesc"></p></div>
+    <div class="start-state" id="startState">
+        <div class="start-icon">✨</div>
+        <h2 class="start-title">Ready to discover?</h2>
+        <p class="start-desc">Select a Target Persona on the left to begin the curated journey.</p>
+    </div>
+    <div class="wiz-wrap" id="wizWrap">
+      <div class="prog-row">
+        <div class="prog-ring"><svg width="56" height="56"><circle class="ring-track" cx="28" cy="28" r="24"/><circle class="ring-fill" id="ringFill" cx="28" cy="28" r="24"/></svg><div class="ring-num" id="ringNum">1</div></div>
+        <div class="prog-meta"><div class="prog-cat" id="wizCat">Category</div><div class="prog-lbl" id="wizLbl">Question 1</div><div class="persona-badge" id="pbText">PERSONA</div></div>
+      </div>
+      <h2 class="wiz-q" id="wizQ">Loading...</h2>
+      <div class="wiz-opts" id="wizOpts"></div>
+      <div style="margin-bottom:32px"><span class="notes-lbl">Rep Notes</span><textarea id="wizNotes" placeholder="Quotes, objections, timelines..."></textarea></div>
+      <div class="wiz-foot">
+        <div class="qdots" id="qdots"></div>
+        <div class="foot-r"><button class="btn btn-fin hidden" id="btnFin" onclick="goReport()">Finish & Build Pitch ✦</button><button class="btn btn-p" id="btnNext" onclick="handleNext()" disabled>Select Answer</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: CHEAT SHEET -->
+  <div class="panel rp"><div class="ph"><span class="ph-lbl">💡 Sales Guide</span></div><div class="pb" id="cheatSheet"></div></div>
+</div>
+
+<div class="rv" id="reportView">
+  <div class="rv-inner">
+    <div class="print-header">
+      <div class="print-logo">MSP <span>SASE Discovery</span> — Confidential</div>
+      <div class="print-date" id="printDate"></div>
+    </div>
+    <div class="rv-eyebrow"><div class="rv-eyebrow-line"></div><div class="rv-eyebrow-badge">✦ Discovery Complete</div><div class="rv-eyebrow-line"></div></div>
+    <h1 class="rv-title">MSP Managed SASE<br>Strategy Brief</h1>
+    <p class="rv-sub" id="rvSub">Generated from your live discovery storyboard.</p>
+    <div class="rv-actions">
+      <button class="btn btn-g" onclick="backToWiz()">← Back to Discovery</button>
+      <button class="btn btn-g" onclick="location.reload()">↺ New Session</button>
+      <button class="btn pdf-btn" id="btnPdf1" style="display:none;" onclick="exportPDF()">⬇ Download PDF</button>
+    </div>
+    <div class="rpt-section" id="summarySection">
+      <div class="rpt-section-title">Discovery Summary — All Questions &amp; Answers</div>
+      <table class="ds-table" id="summaryTable"><thead><tr><th style="width:8%">#</th><th style="width:20%">Category</th><th style="width:30%">Question</th><th style="width:22%">Answer</th><th style="width:20%">Notes</th></tr></thead><tbody id="summaryBody"></tbody></table>
+    </div>
+    <div class="rpt-section">
+      <div class="rpt-section-title">Executive Brief</div>
+      <div id="reportBox">
+        <div class="gen-wrap" id="genWrapDiv">
+          <button class="gen-btn" id="genBtn" onclick="generateReport()">⚡ Generate Executive Strategy Brief</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   GLOBALS
+═══════════════════════════════════════ */
+const MAX_Q = 12;
+let gkey = '';
+let history = [];
+let currentQ = null;
+let tempSel = { val: null, text: null };
+
+/* ═══════════════════════════════════════
+   PERSONA DEFINITIONS & DICTIONARIES
+═══════════════════════════════════════ */
+const PERSONAS = {
+  "CISO": {
+    icon:"🛡️", role:"CISO — Chief Information Security Officer", focus:"Risk, compliance, posture", angle:"Focus on outcomes and liability.",
+    firstQ:{ cat:"Security Risk & Compliance", q:"What's your biggest unresolved security risk today — and how is your current architecture contributing to it?", opts:[{text:"Shadow IT sprawl",badge:"risk",val:"Shadow IT"},{text:"Over-privileged VPN access",badge:"risk",val:"VPN Lateral"},{text:"Compliance gaps (NIS2, PCI)",badge:"driver",val:"Compliance"},{text:"Lack of visibility",badge:"pain",val:"No Vis"},{text:"Supply chain attack surface",badge:"risk",val:"3rd Party"}], cs:[{type:"t-ac",title:"CISO Talk Track",body:"<strong>\"CISOs are telling us that their biggest exposure is architectural debt. What does your current incident response look like?\"</strong>"},{type:"t-rd",title:"Pain Triggers",body:"NIS2 enforcement and board scrutiny post-breach."}] }
+  },
+  "CIO": {
+    icon:"💼", role:"CIO — Chief Information Officer", focus:"Transformation, ROI, strategy", angle:"Connect SASE to digital transformation goals.",
+    firstQ:{ cat:"Digital Transformation", q:"Where does your network infrastructure stand as a barrier to your digital transformation agenda?", opts:[{text:"Cloud migration slowed by architecture",badge:"pain",val:"Cloud Blocker"},{text:"M&A integration is too slow",badge:"pain",val:"MA Integration"},{text:"Hybrid work security gaps",badge:"risk",val:"Hybrid Gap"},{text:"Vendor contract consolidation",badge:"driver",val:"Consolidation"},{text:"IT team bandwidth",badge:"pain",val:"Capacity"}], cs:[{type:"t-ac",title:"CIO Talk Track",body:"<strong>\"progressive CIOs treat the network as a business platform. Is your WAN architecture part of your cloud conversation?\"</strong>"},{type:"t-am",title:"Value Angles",body:"Consolidation savings and faster time-to-connect."}] }
+  },
+  "IT Director": {
+    icon:"🖥️", role:"IT Director", focus:"Operations, management", angle:"Focus on operational burden.",
+    firstQ:{ cat:"Operational Pain", q:"What's consuming the most time in your IT team right now that shouldn't be?", opts:[{text:"Managing VPN incidents",badge:"pain",val:"VPN Mgmt"},{text:"Maintaining ageing hardware",badge:"legacy",val:"Hardware"},{text:"Chasing multiple vendors",badge:"pain",val:"Vendor Chaos"},{text:"Onboarding new sites",badge:"pain",val:"Onboarding"},{text:"Executive reporting",badge:"pain",val:"Reporting"}], cs:[{type:"t-ac",title:"Talk Track",body:"<strong>\"If MSP Managed SASE eliminates firefighting, how does that change your week?\"</strong>"},{type:"t-am",title:"Managed Service Angle",body:"Lead with MSP's 24/7 NOC."}] }
+  },
+  "Network Manager": {
+    icon:"🌐", role:"Network Manager / Architect", focus:"Performance, SD-WAN, uptime", angle:"Go deep on technical architecture and SLAs.",
+    firstQ:{ cat:"WAN Architecture", q:"Walk me through your current WAN architecture — how are branches connecting to cloud resources today?", opts:[{text:"Pure MPLS / Central breakout",badge:"legacy",val:"MPLS"},{text:"MPLS + manual broadband backup",badge:"legacy",val:"Hybrid Manual"},{text:"SD-WAN with local breakout (no security)",badge:"pain",val:"SDWAN No Sec"},{text:"Inconsistent mix of DIA/MPLS",badge:"pain",val:"Inconsistent"},{text:"Cloud-first with heavy VPN",badge:"mature",val:"Cloud VPN"}], cs:[{type:"t-ac",title:"Technical Talk Track",body:"<strong>\"What's your current failover behaviour? How long does a global policy change take?\"</strong>"},{type:"t-cy",title:"MSP Mid-Mile",body:"Lead with our owned global IP backbone."}] }
+  },
+  "Security Manager": {
+    icon:"🔐", role:"Security Manager / Engineer", focus:"Controls, threats, policy", angle:"Get specific on SWG, CASB, ZTNA.",
+    firstQ:{ cat:"Security Stack", q:"What does your current security stack look like for SaaS access — and where are the gaps?", opts:[{text:"On-prem proxy backhaul",badge:"legacy",val:"Backhaul"},{text:"No consistent CASB policy",badge:"risk",val:"No CASB"},{text:"Partial ZTNA deployment",badge:"pain",val:"Partial ZTNA"},{text:"Fragmented point products",badge:"pain",val:"Tool Sprawl"},{text:"Mature SSE but no network integration",badge:"mature",val:"Siloed SSE"}], cs:[{type:"t-ac",title:"Talk Track",body:"<strong>\"When a user accesses Salesforce today, does that traffic get inspected? What about Shadow IT?\"</strong>"},{type:"t-pu",title:"Integration Angle",body:"MSP integrates with leading SIEMs."}] }
+  },
+  "NOC/SOC Analyst": {
+    icon:"📡", role:"NOC / SOC Analyst", focus:"Visibility, alerting, workflow", angle:"Focus on alert fatigue.",
+    firstQ:{ cat:"Visibility & Operations", q:"When an alert fires today, what does the investigation workflow look like?", opts:[{text:"Too many consoles",badge:"pain",val:"Tool Sprawl"},{text:"High alert fatigue",badge:"risk",val:"Fatigue"},{text:"No branch visibility",badge:"risk",val:"No Vis"},{text:"Slow escalation",badge:"pain",val:"Escalation"},{text:"Tooling okay, lack threat intel",badge:"pivot",val:"No Intel"}], cs:[{type:"t-ac",title:"Analyst Talk Track",body:"<strong>\"If you had a single-pane view, how much time would you save?\"</strong>"},{type:"t-gn",title:"Champion Creation",body:"Show how MSP makes their job easier."}] }
+  },
+  "CFO": {
+    icon:"💰", role:"CFO", focus:"ROI & TCO", angle:"Lead with financial framing.",
+    firstQ:{ cat:"Commercial Drivers", q:"When you look at your current infrastructure spend, what is your primary financial objective?", opts:[{text:"Reduce WAN costs (MPLS)",badge:"driver",val:"WAN Cost"},{text:"Eliminate hardware CapEx",badge:"legacy",val:"CapEx"},{text:"Consolidate fragmented bills",badge:"driver",val:"Consolidation"},{text:"Reduce incident risk",badge:"risk",val:"Risk Cost"},{text:"Move to predictable OpEx",badge:"driver",val:"OpEx"}], cs:[{type:"t-ac",title:"CFO Talk Track",body:"<strong>\"MSP typically sees 30-45% WAN cost reduction. Is that something you've modelled?\"</strong>"},{type:"t-am",title:"Financial Proof",body:"Avoid technology features; focus on P&L impact."}] }
+  },
+  "Procurement": {
+    icon:"📋", role:"Procurement", focus:"SLAs & Contracts", angle:"Focus on Our global scale.",
+    firstQ:{ cat:"Procurement Strategy", q:"What's driving your vendor evaluation process?", opts:[{text:"Single accountable vendor",badge:"driver",val:"Single SLA"},{text:"G-Cloud/Crown frameworks",badge:"driver",val:"Frameworks"},{text:"Market test renewal",badge:"pivot",val:"Renewal"},{text:"Diversifying supplier risk",badge:"risk",val:"Risk"},{text:"Price benchmarking",badge:"pain",val:"Price"}], cs:[{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP is on CCS and G-Cloud 14. Does that simplify your tender process?\"</strong>"},{type:"t-cy",title:"The MSP Advantage",body:"One contract vs network provider + SASE vendor."}] }
+  }
+};
+
+const VERTICALS = {
+  "Financial Services":"FCA/PRA compliance, DORA mandates, data sovereignty, SWIFT security.",
+  "Healthcare":"CQC compliance, NHS standards, medical device segmentation.",
+  "Manufacturing":"OT/IT convergence, ICS isolation, IoT security.",
+  "Retail / Logistics":"PCI-DSS, warehouse connectivity, bandwidth scaling.",
+  "Government / Public Sector":"OFFICIAL-SENSITIVE handling, PSN compliance.",
+  "Technology":"DevSecOps, cloud workloads, API security, fast expansion."
+};
+
+const BATTLECARDS = {
+  "Zscaler":{ weakness:"No integrated SD-WAN/Underlay. Siloed security.", msp_win:"End-to-end SLA, network ownership.", trap:"Ask: 'Who fixes the link if the Zscaler node is fine?'" },
+  "Cato Networks":{ weakness:"PoP density thin outside US. DIY model.", msp_win:"MSP Global reach + Managed SOC.", trap:"Ask: 'How many regional engineers do you have in EMEA?'" },
+  "Palo Alto Prisma":{ weakness:"Expensive, high-staffing req.", msp_win:"MSP removes operational burden.", trap:"Ask: 'What is your required FTE headcount to run this?'" },
+  "Fortinet":{ weakness:"Hardware dependent. Not cloud-native SSE.", msp_win:"Cloud agility, hardware-agnostic.", trap:"Ask: 'What is your 3yr firewall refresh budget?'" },
+  "Vodafone":{ weakness:"Reseller-based model.", msp_win:"Owned global IP network backbone.", trap:"Ask: 'Is this native security IP or white-labelled?'" },
+  "Orange":{ weakness:"Thin network reach outside Western Europe.", msp_win:"Global 180+ country reach.", trap:"Ask: 'How do you handle APAC/Americas support?'" }
+};
+
+/* ═══════════════════════════════════════
+   THE 96-QUESTION DEMO BANK (12x8 Personas)
+═══════════════════════════════════════ */
+const DEMO_BANK = {
+  "CISO": [
+    { cat:"Cloud Exposure", q:"With {{industry}} data moving to SaaS, how are you preventing data exfiltration?", opts:[ {text:"Rely on native SaaS controls", badge:"risk", val:"Native SaaS"}, {text:"Backhaul to HQ", badge:"legacy", val:"Backhaul"}, {text:"Standalone CASB", badge:"pain", val:"Siloed CASB"}, {text:"No cloud inspection", badge:"risk", val:"Blind Spot"}, {text:"Unified SSE platform", badge:"mature", val:"SSE"} ], cs:[ {type:"t-rd",title:"Cloud Risk",body:"Securing the perimeter is useless if data lives in Salesforce/M365."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"If an employee downloads a sensitive {{industry}} document from Teams and uploads it to Dropbox, would you know?\"</strong>"} ] },
+    { cat:"Lateral Movement", q:"If a remote endpoint is compromised, what prevents lateral movement across your network?", opts:[ {text:"VPN gives full access", badge:"risk", val:"Flat Network"}, {text:"Basic internal firewalls", badge:"pain", val:"Basic Seg"}, {text:"Jump boxes", badge:"pain", val:"Jump Boxes"}, {text:"Partial ZTNA for contractors", badge:"pivot", val:"Partial ZTNA"}, {text:"Identity-based micro-segmentation", badge:"mature", val:"Zero Trust"} ], cs:[ {type:"t-am",title:"VPN Trap",body:"VPNs grant network access. ZTNA grants app access."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"A VPN says 'you are in the building.' ZTNA says 'you are in the hallway, and the doors are locked.'\"</strong>"} ] },
+    { cat:"SOC & Telemetry", q:"How is your SOC correlating network events with security alerts?", opts:[ {text:"They don't (siloed teams)", badge:"risk", val:"Siloed"}, {text:"SIEM but high alert fatigue", badge:"pain", val:"Alert Fatigue"}, {text:"Basic firewall logs", badge:"legacy", val:"Basic Logs"}, {text:"Outsourced MDR", badge:"driver", val:"MDR"}, {text:"Unified XDR/SOAR", badge:"mature", val:"Unified SOC"} ], cs:[ {type:"t-pu",title:"Convergence",body:"SASE means unified telemetry. Our SOC sees both SD-WAN and SSE."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"When an actor moves from a branch router to a cloud app, can you track the kill chain in one dashboard?\"</strong>"} ] },
+    { cat:"Policy Enforcement", q:"How do you ensure consistent policies for branch vs remote users?", opts:[ {text:"We can't", badge:"risk", val:"Inconsistent"}, {text:"Force remote through VPN", badge:"pain", val:"Forced VPN"}, {text:"Manage separate policy engines", badge:"pain", val:"Dual Management"}, {text:"Rely on EDR only", badge:"risk", val:"EDR Only"}, {text:"Unified SASE policy", badge:"mature", val:"Unified"} ], cs:[ {type:"t-am",title:"Management Burden",body:"Separate branch and cloud proxy policies lead to drift."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"If you need to block a malicious domain across your {{industry}} environment, how many consoles do you log into?\"</strong>"} ] },
+    { cat:"Vendor Consolidation", q:"How many different vendor agents are running on corporate endpoints?", opts:[ {text:"3 or more (VPN, Web Proxy, EDR)", badge:"pain", val:"Agent Bloat"}, {text:"2 (VPN + EDR)", badge:"legacy", val:"Dual Agents"}, {text:"No agents (limits remote work)", badge:"legacy", val:"No Agents"}, {text:"Actively consolidating", badge:"driver", val:"Consolidating"}, {text:"Single SASE agent", badge:"mature", val:"Single Agent"} ], cs:[ {type:"t-pu",title:"Agent Bloat",body:"Multiple agents degrade laptops. SASE consolidates this."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"Every agent is a point of failure. MSP Managed SASE consolidates VPN, SWG, and CASB into one lightweight client.\"</strong>"} ] },
+    { cat:"IoT / OT Security", q:"In the {{industry}} space, how are you securing unmanaged devices (IoT/OT) that can't run a security agent?", opts:[ {text:"No visibility on IoT devices", badge:"risk", val:"No Visibility"}, {text:"Isolated on separate VLANs", badge:"legacy", val:"VLAN Isolation"}, {text:"Secured by branch firewalls", badge:"pain", val:"Branch FW"}, {text:"Evaluating NAC solutions", badge:"driver", val:"Evaluating NAC"}, {text:"SD-WAN integrated device profiling", badge:"mature", val:"SD-WAN Profiling"} ], cs:[ {type:"t-rd",title:"The Agentless Gap",body:"SSE protects laptops, but SD-WAN protects IoT. You need both."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"If a connected printer is compromised, your cloud proxy won't see it. Our SD-WAN catches that lateral movement locally.\"</strong>"} ] },
+    { cat:"Remote Work Risk", q:"How do you verify device posture before granting access to remote workers?", opts:[ {text:"We don't check posture", badge:"risk", val:"No Checks"}, {text:"Check at initial VPN login only", badge:"pain", val:"Login Only"}, {text:"Rely on MDM sync delays", badge:"legacy", val:"MDM Delays"}, {text:"Continuous posture checking", badge:"mature", val:"Continuous Checks"}, {text:"Evaluating posture tools", badge:"driver", val:"Evaluating"} ], cs:[ {type:"t-am",title:"Continuous Auth",body:"ZTNA checks posture continuously, not just at login."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"If a user turns off their AV mid-session, does your VPN kick them off? ZTNA revokes access instantly.\"</strong>"} ] },
+    { cat:"Data Sovereignty", q:"How are you managing data sovereignty requirements specific to {{industry}} when inspecting cloud traffic?", opts:[ {text:"Traffic routes to global nodes", badge:"risk", val:"Offshore Routing"}, {text:"We keep all inspection on-prem", badge:"legacy", val:"On-Prem Only"}, {text:"We hope our cloud vendor complies", badge:"pain", val:"Unsure Compliance"}, {text:"We use regional cloud proxies", badge:"mature", val:"Regional Proxies"}, {text:"Looking for sovereign PoPs", badge:"driver", val:"Seeking Sovereign"} ], cs:[ {type:"t-pu",title:"Sovereignty",body:"Our global PoPs ensure traffic is inspected in-region."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"Unlike some vendors, MSP guarantees your {{industry}} traffic is inspected within the required geographical borders.\"</strong>"} ] },
+    { cat:"Third-Party Access", q:"How do you grant access to contractors without putting them on the corporate network?", opts:[ {text:"Give them VPN access and trust them", badge:"risk", val:"VPN Trust"}, {text:"Ship them a corporate laptop", badge:"pain", val:"Costly Laptops"}, {text:"Use clunky VDI / Citrix", badge:"legacy", val:"VDI"}, {text:"Looking to modernize partner access", badge:"driver", val:"Modernizing"}, {text:"Clientless browser-based ZTNA", badge:"mature", val:"Clientless ZTNA"} ], cs:[ {type:"t-cy",title:"Clientless ZTNA",body:"Clientless ZTNA is a massive cost-saver vs VDI or shipping laptops."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"Our ZTNA allows contractors to securely access specific internal apps through a browser, with zero agents installed.\"</strong>"} ] },
+    { cat:"Decryption", q:"With 90%+ of traffic encrypted, how are you inspecting SSL traffic without killing performance?", opts:[ {text:"We don't decrypt", badge:"risk", val:"Blind to SSL"}, {text:"Only decrypt known-bad sites", badge:"risk", val:"Partial Decrypt"}, {text:"Firewalls struggle with the load", badge:"pain", val:"FW Overload"}, {text:"Decrypt on the endpoint", badge:"pain", val:"Endpoint Drain"}, {text:"Cloud-scale decryption", badge:"mature", val:"Cloud Decrypt"} ], cs:[ {type:"t-am",title:"SSL Blind Spot",body:"Legacy firewalls melt under SSL decryption load."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"Our cloud architecture decrypts at scale in the cloud, giving zero performance hit to branch routers.\"</strong>"} ] },
+    { cat:"Incident Response Time", q:"When an IOC triggers, how coordinated is the response between security and the network?", opts:[ {text:"Manual emails to network team", badge:"pain", val:"Manual Emails"}, {text:"Endpoint isolation only", badge:"risk", val:"Endpoint Only"}, {text:"Takes 24hrs for a firewall change", badge:"pain", val:"Slow Changes"}, {text:"Building SOAR playbooks", badge:"driver", val:"Building SOAR"}, {text:"Automated network quarantine", badge:"mature", val:"Automated"} ], cs:[ {type:"t-gn",title:"Unified Response",body:"SASE means the network acts on security's commands immediately."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"If {{competitor}} only provides security, they can't command the network. MSP Managed SASE automatically quarantines the segment.\"</strong>"} ] },
+    { cat:"Board Reporting", q:"If the board asked you to guarantee resilience against ransomware, how confident are you?", opts:[ {text:"Not confident", badge:"risk", val:"Not Confident"}, {text:"Have tools, lack integration", badge:"pain", val:"Blind Spots"}, {text:"Compliant, but maybe not secure", badge:"risk", val:"Compliance Only"}, {text:"Actively investing to close gaps", badge:"driver", val:"Investing"}, {text:"Highly confident in ZTNA/SSE", badge:"mature", val:"Confident"} ], cs:[ {type:"t-am",title:"Board Framing",body:"Tie tech back to executive risk and liability."}, {type:"t-ac",title:"Talk Track",body:"<strong>\"Ultimately, MSP provides a fully managed security outcome you can confidently report to the board.\"</strong>"} ] }
+  ],
+  "CIO": [
+    { cat:"Transformation Speed", q:"How is your legacy network architecture slowing down your cloud migration goals?", opts:[{text:"Backhauling causes huge latency",badge:"pain",val:"Latency"},{text:"Bandwidth costs are exploding",badge:"pain",val:"Cost"},{text:"Security can't keep up with DevOps",badge:"risk",val:"Slow Sec"},{text:"Locked in MPLS contracts",badge:"legacy",val:"MPLS"},{text:"Fully Aligned",badge:"mature",val:"Ok"}], cs:[{type:"t-ac",title:"CIO Context",body:"Network debt is transformation debt."},{type:"t-rd",title:"MSP Angle",body:"<strong>\"When business units complain 'the cloud is slow', it's usually the network architecture. How much is latency costing {{industry}} productivity?\"</strong>"}] },
+    { cat:"Cost Model", q:"What is the primary financial mechanism you want to shift in your tech spend?", opts:[{text:"Kill CapEx cycles",badge:"driver",val:"OpEx"},{text:"Reduce overall WAN spend",badge:"driver",val:"WAN"},{text:"Consolidate bills",badge:"driver",val:"Bills"},{text:"Reduce internal FTE costs",badge:"pain",val:"FTE"},{text:"Happy currently",badge:"mature",val:"Happy"}], cs:[{type:"t-gn",title:"Financials",body:"Displacing MPLS often funds the whole SASE project."},{type:"t-am",title:"MSP Angle",body:"<strong>\"By moving to MSP, we help enterprises shift to predictable OpEx and reduce overall WAN spend by displacing legacy MPLS.\"</strong>"}] },
+    { cat:"M&A Agility", q:"How long does it take to securely integrate a new acquisition into your WAN?", opts:[{text:"Months (waiting on circuits)",badge:"pain",val:"Months"},{text:"Weeks (hardware provisioning)",badge:"pain",val:"Weeks"},{text:"Days (but it's insecure)",badge:"risk",val:"Days"},{text:"Struggle with IP overlaps",badge:"pain",val:"Overlap"},{text:"Hours (via ZTNA)",badge:"mature",val:"Hours"}], cs:[{type:"t-cy",title:"Speed to Value",body:"SASE allows Day-1 access without merging networks."},{type:"t-pu",title:"MSP Angle",body:"<strong>\"With Our ZTNA, you don't merge networks. You grant app-level access on Day 1 over any connection.\"</strong>"}] },
+    { cat:"Vendor Complexity", q:"How many vendors are you managing across your global network and security estate?", opts:[{text:"10+ Vendors",badge:"pain",val:"10"},{text:"5-10 Vendors",badge:"pain",val:"5-10"},{text:"3-4 Vendors",badge:"legacy",val:"3-4"},{text:"Using an SI for it",badge:"pivot",val:"SI"},{text:"Consolidated partners",badge:"mature",val:"Consolidated"}], cs:[{type:"t-rd",title:"SLA Finger Pointing",body:"One vendor for underlay and overlay removes friction."},{type:"t-am",title:"MSP Angle",body:"<strong>\"When a site goes down, how much time is wasted proving who is at fault? MSP provides a single SLA across underlay and overlay.\"</strong>"}] },
+    { cat:"Talent & Operations", q:"How is your team coping with the current operational maintenance load?", opts:[{text:"Drowning in reactive work",badge:"pain",val:"Reactive"},{text:"Skills gap for Zero Trust",badge:"risk",val:"Gap"},{text:"Heavy reliance on contractors",badge:"pain",val:"Contractors"},{text:"Outsourcing ops to focus on strategy",badge:"driver",val:"Outsource"},{text:"Fully staffed team",badge:"mature",val:"Staffed"}], cs:[{type:"t-pu",title:"Talent Crisis",body:"SASE offloads the grind so they focus on innovation."},{type:"t-gn",title:"MSP Angle",body:"<strong>\"Your smartest architects shouldn't be updating firewall rules. MSP offloads the grind so they focus on {{industry}} outcomes.\"</strong>"}] },
+    { cat:"Risk Posture", q:"How confident are you in reporting your security posture to the board?", opts:[{text:"Not confident",badge:"risk",val:"Low"},{text:"Blind spots exist",badge:"pain",val:"Blind"},{text:"Compliance only focus",badge:"risk",val:"Comp"},{text:"Actively investing",badge:"driver",val:"Inv"},{text:"Highly confident",badge:"mature",val:"Hi"}], cs:[{type:"t-am",title:"Board Framing",body:"Managed SASE provides an outcome, not just a tool."},{type:"t-ac",title:"MSP Angle",body:"<strong>\"Ultimately, {{competitor}} gives you a tool. MSP gives you a fully managed security outcome that you can confidently report to the board.\"</strong>"}] },
+    { cat:"End User UX", q:"How is application performance affecting employee productivity?", opts:[{text:"High UX complaints",badge:"pain",val:"Bad UX"},{text:"Teams/Zoom call drops",badge:"pain",val:"Video Drop"},{text:"VPN logon friction",badge:"pain",val:"Logon"},{text:"Evaluating DEM tools",badge:"driver",val:"DEM"},{text:"Seamless globally",badge:"mature",val:"Smooth"}], cs:[{type:"t-pu",title:"Productivity",body:"SASE guarantees the experience via DEM."},{type:"t-gn",title:"MSP Angle",body:"<strong>\"Our SASE includes DEM, so we don't just secure the connection, we proactively guarantee the application experience.\"</strong>"}] },
+    { cat:"Shadow IT", q:"How much control do you have over SaaS data sprawl and Shadow IT?", opts:[{text:"No control currently",badge:"risk",val:"None"},{text:"Manual audits only",badge:"legacy",val:"Audits"},{text:"DNS level blocking only",badge:"pain",val:"DNS"},{text:"Seeking inline CASB",badge:"driver",val:"CASB"},{text:"Full governance",badge:"mature",val:"Gov"}], cs:[{type:"t-rd",title:"Data Sprawl",body:"SASE provides visibility into unapproved app use."},{type:"t-am",title:"MSP Angle",body:"<strong>\"Our inline CASB gives you instant visibility into every unapproved app being used, allowing you to govern rather than blindly block.\"</strong>"}] },
+    { cat:"Technology Debt", q:"How much of your estate is approaching end-of-life in 18 months?", opts:[{text:"Massive refresh due",badge:"legacy",val:"EOL"},{text:"Budget frozen",badge:"pain",val:"Frozen"},{text:"Sweating assets",badge:"risk",val:"Sweat"},{text:"Planning modernization",badge:"driver",val:"Plan"},{text:"Recently modernized",badge:"mature",val:"Modern"}], cs:[{type:"t-am",title:"Hardware Cliffs",body:"EOL hardware is the perfect catalyst for SASE."},{type:"t-cy",title:"MSP Angle",body:"<strong>\"Before spending CapEx on replacement boxes, let's look at how Our cloud-delivered SASE makes that hardware obsolete.\"</strong>"}] },
+    { cat:"Green IT", q:"How critical is carbon reduction in your IT strategy?", opts:[{text:"Not considered",badge:"legacy",val:"No"},{text:"Nice to have",badge:"pivot",val:"Maybe"},{text:"Basic ESG reporting",badge:"driver",val:"Basic"},{text:"Mandatory RFP criteria",badge:"driver",val:"Mandatory"},{text:"Active Scope 3 tracking",badge:"mature",val:"Scope3"}], cs:[{type:"t-gn",title:"Sustainability",body:"Cloud PoPs reduce branch power consumption."},{type:"t-pu",title:"MSP Angle",body:"<strong>\"Moving from hundreds of power-hungry branch firewalls to MSP's efficient cloud PoPs significantly reduces your Scope 3 emissions.\"</strong>"}] },
+    { cat:"Simplicity", q:"What's your plan for consolidating the security/network stack?", opts:[{text:"Stuck in silos",badge:"pain",val:"Silos"},{text:"Planning convergence",badge:"driver",val:"Plan"},{text:"Reseller bundled",badge:"legacy",val:"VAR"},{text:"Best of breed focus",badge:"pivot",val:"BOB"},{text:"Single platform",badge:"mature",val:"SASE"}], cs:[{type:"t-pu",title:"Convergence",body:"MSP converges 5 consoles into 1."},{type:"t-rd",title:"MSP Angle",body:"<strong>\"Every agent you add is a point of failure. MSP Managed SASE can consolidate your VPN, SWG, and CASB into a single client.\"</strong>"}] },
+    { cat:"Conclusion", q:"Why take on the risk of DIY integration yourself?", opts:[{text:"DIY preference",badge:"legacy",val:"DIY"},{text:"MSP distrust",badge:"risk",val:"Trust"},{text:"Vendor limitation",badge:"pivot",val:"Lim"},{text:"Outcome focused",badge:"driver",val:"Out"},{text:"Existing global MSP",badge:"mature",val:"MSP"}], cs:[{type:"t-gn",title:"Accountability",body:"MSP takes accountability for the whole outcome."},{type:"t-ac",title:"MSP Angle",body:"<strong>\"With MSP, you don't buy boxes. You buy an outcome: secure, fast access for every user, backed by our global SOC and one contract.\"</strong>"}] }
+  ],
+  "IT Director": [
+    { cat:"Operational Pain", q:"What's consuming the most time in your IT team right now that shouldn't be?", opts:[{text:"Managing VPN incidents",badge:"pain",val:"VPN Mgmt"},{text:"Maintaining ageing hardware",badge:"legacy",val:"Hardware"},{text:"Chasing multiple vendors",badge:"pain",val:"Vendor Chaos"},{text:"Onboarding new sites",badge:"pain",val:"Onboarding"},{text:"Executive reporting",badge:"pain",val:"Reporting"}], cs:[{type:"t-ac",title:"Talk Track",body:"<strong>\"IT Directors spend 40% of their week firefighting. If MSP Managed SASE eliminates those tickets, how does that change your week?\"</strong>"},{type:"t-am",title:"Managed Service Angle",body:"Lead with MSP's 24/7 NOC."}] },
+    { cat:"Hardware Refresh", q:"What does your branch hardware refresh cycle look like over the next 12-24 months?", opts:[{text:"Massive firewall replacement needed",badge:"legacy",val:"FW Replacement"},{text:"Routers are EOL",badge:"legacy",val:"Router EOL"},{text:"Budgets frozen, forced to sweat assets",badge:"pain",val:"Sweating Assets"},{text:"Looking to move to a thin-edge model",badge:"driver",val:"Thin Edge"},{text:"Already refreshed with SD-WAN",badge:"mature",val:"Refreshed"}], cs:[{type:"t-pu",title:"CapEx Avoidance",body:"Hardware refreshes are the best catalyst for SASE."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Instead of dropping CapEx on new branch firewalls, Our cloud-delivered security makes the branch edge incredibly lightweight.\"</strong>"}] },
+    { cat:"Remote Access", q:"How is your team handling the support overhead of remote users?", opts:[{text:"Constant VPN disconnect complaints",badge:"pain",val:"VPN Drops"},{text:"Password resets and MFA lockouts",badge:"pain",val:"Auth Issues"},{text:"Routing issues causing slow speeds",badge:"pain",val:"Routing Delays"},{text:"Moving to ZTNA to reduce friction",badge:"driver",val:"Moving to ZTNA"},{text:"Clientless access has solved this",badge:"mature",val:"Clientless"}], cs:[{type:"t-rd",title:"User Friction",body:"VPNs generate the most helpdesk tickets."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our ZTNA removes the user from the network layer entirely, silently authenticating them. Ticket volumes drop massively.\"</strong>"}] },
+    { cat:"Change Management", q:"When a global policy needs to change, how long does it take to push to every site?", opts:[{text:"Days or weeks (manual)",badge:"pain",val:"Manual Push"},{text:"Requires scheduled downtime windows",badge:"legacy",val:"Downtime Req"},{text:"Inconsistent across tools",badge:"risk",val:"Inconsistent"},{text:"Evaluating centralized orchestration",badge:"driver",val:"Eval Orch"},{text:"Minutes via centralized cloud portal",badge:"mature",val:"Central Portal"}], cs:[{type:"t-cy",title:"Agility",body:"Legacy changes take weeks. SASE takes minutes."},{type:"t-ac",title:"Talk Track",body:"<strong>\"With MSP Managed SASE, a policy change in the dashboard propagates globally in minutes, without touching a CLI.\"</strong>"}] },
+    { cat:"Multi-Vendor Chaos", q:"During a major network degradation, how does your team perform root-cause analysis?", opts:[{text:"Blind guessing and packet captures",badge:"pain",val:"Guessing"},{text:"Waiting on hold with multiple ISPs",badge:"pain",val:"Hold Times"},{text:"Security blames network, network blames security",badge:"risk",val:"Finger Pointing"},{text:"Seeking a unified observability tool",badge:"driver",val:"Seeking Obs"},{text:"Unified NOC/SOC view",badge:"mature",val:"Unified View"}], cs:[{type:"t-gn",title:"Single Pane",body:"MTTR is terrible in multi-vendor setups."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP eliminates the finger-pointing. Our NOC monitors the ISP, the SD-WAN, and the security layer. We find the fault before you do.\"</strong>"}] },
+    { cat:"Bandwidth Constraints", q:"How is video-heavy collaboration impacting your branch bandwidth?", opts:[{text:"Choking expensive MPLS links",badge:"legacy",val:"MPLS Choke"},{text:"Local internet breakouts are unsecured",badge:"risk",val:"Unsecured Breakout"},{text:"Constant QoS and jitter complaints",badge:"pain",val:"Jitter"},{text:"Looking to augment with broadband",badge:"driver",val:"Augmenting"},{text:"SD-WAN handles steering perfectly",badge:"mature",val:"SD-WAN Steering"}], cs:[{type:"t-am",title:"The Video Tax",body:"Video kills legacy networks. SD-WAN fixes it."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our SD-WAN steers Teams traffic over direct broadband while keeping sensitive {{industry}} data on private links, automatically.\"</strong>"}] },
+    { cat:"Network Visibility", q:"Do you have actionable visibility into which applications are consuming bandwidth?", opts:[{text:"No, mostly dark traffic",badge:"risk",val:"Dark Traffic"},{text:"Basic NetFlow, lacking Layer 7",badge:"legacy",val:"Basic NetFlow"},{text:"Only on LAN, blind to remote",badge:"pain",val:"LAN Only"},{text:"Evaluating DEM",badge:"driver",val:"Eval DEM"},{text:"Full Layer 7 visibility globally",badge:"mature",val:"Layer 7 Vis"}], cs:[{type:"t-pu",title:"Layer 7 Insights",body:"You can't manage what you can't see."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP Managed SASE provides deep packet inspection, showing you exactly which SaaS apps are eating bandwidth.\"</strong>"}] },
+    { cat:"Site Onboarding", q:"If the business signs a lease on a new branch tomorrow, what is the timeline to get it online?", opts:[{text:"90+ days waiting for circuits",badge:"pain",val:"90+ Days"},{text:"30 days with temporary 4G hacks",badge:"pain",val:"30 Days/Hacks"},{text:"Fast network, but security takes weeks",badge:"risk",val:"Sec Lag"},{text:"Moving to Zero Touch Provisioning",badge:"driver",val:"Moving to ZTP"},{text:"Days, using 5G and ZTP",badge:"mature",val:"Days with ZTP"}], cs:[{type:"t-cy",title:"Zero Touch",body:"Speed to market is an IT Director KPI."},{type:"t-ac",title:"Talk Track",body:"<strong>\"We ship an MSP edge device, plug it into any broadband, it downloads policies, and the site is securely online in minutes.\"</strong>"}] },
+    { cat:"Security Tool Sprawl", q:"How many different security consoles do your engineers need to check daily?", opts:[{text:"5+ (Firewall, Proxy, VPN, AV)",badge:"pain",val:"5+ Consoles"},{text:"3-4 disjointed systems",badge:"pain",val:"3-4 Consoles"},{text:"Consolidated to 2 vendors",badge:"legacy",val:"2 Vendors"},{text:"Actively driving consolidation",badge:"driver",val:"Consolidating"},{text:"Single SASE portal",badge:"mature",val:"Single Portal"}], cs:[{type:"t-am",title:"Console Fatigue",body:"More consoles = more missed alerts."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP Managed SASE converges SD-WAN, Firewall, SWG, and ZTNA into one interface.\"</strong>"}] },
+    { cat:"Compliance & Audits", q:"When an auditor asks for proof of segmentation, how painful is the data gathering process?", opts:[{text:"Massive manual nightmare",badge:"pain",val:"Manual Nightmare"},{text:"Pull logs from multiple systems",badge:"pain",val:"Manual Correlation"},{text:"Rely on static firewall rulesets",badge:"legacy",val:"Static Rules"},{text:"Implementing automated reporting",badge:"driver",val:"Automating"},{text:"Instant via unified dashboard",badge:"mature",val:"Instant"}], cs:[{type:"t-rd",title:"The Audit Pain",body:"IT Directors dread audits. Make it easy."},{type:"t-ac",title:"Talk Track",body:"<strong>\"With MSP's unified platform, proving compliance in the {{industry}} sector is a single-click report.\"</strong>"}] },
+    { cat:"Co-Management", q:"In a managed services model, where do you draw the line for your team vs the MSP?", opts:[{text:"Want to dump everything on MSP",badge:"driver",val:"Full Outsource"},{text:"Need read/write access to policies",badge:"pivot",val:"Co-Managed Policies"},{text:"MSP handles out-of-hours only",badge:"driver",val:"OOH Only"},{text:"Don't trust MSPs to make changes",badge:"pain",val:"Trust Issues"},{text:"Flexible co-managed portal",badge:"mature",val:"Flexible"}], cs:[{type:"t-gn",title:"Flexible Co-Management",body:"Address the fear of losing control."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP doesn't lock you out. Our co-managed model lets you push urgent policy changes instantly, while we handle 24/7 monitoring.\"</strong>"}] },
+    { cat:"Strategic Value", q:"If we removed the daily firefighting, what strategic projects would your team actually focus on?", opts:[{text:"Cloud and AI integration",badge:"driver",val:"Cloud/AI"},{text:"Improving core business applications",badge:"driver",val:"Core Apps"},{text:"Security posture maturity",badge:"driver",val:"Security Posture"},{text:"We'd finally clear our backlog",badge:"pain",val:"Clear Backlog"},{text:"We are already highly strategic",badge:"mature",val:"Strategic"}], cs:[{type:"t-pu",title:"The Vision",body:"End on an aspirational note."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP's goal isn't just to sell SASE. It's to give your team their time back to drive projects that matter to your CEO.\"</strong>"}] }
+  ],
+  "Network Manager": [
+    { cat:"Routing & Underlay", q:"What challenges are you seeing with your current internet/MPLS mix?", opts:[{text:"High latency/packet loss on broadband",badge:"pain",val:"Poor Broadband"},{text:"MPLS is reliable but too expensive",badge:"legacy",val:"MPLS Cost"},{text:"Global routing is a nightmare",badge:"pain",val:"Global ISP Mess"},{text:"Failover is too slow",badge:"risk",val:"Slow Failover"},{text:"Solid underlay, lack SD-WAN",badge:"pivot",val:"No SDWAN"}], cs:[{type:"t-cy",title:"Underlay Truth",body:"Competitors ignore the underlay. MSP owns it."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Software can't fix a bad physical circuit. MSP provides a globally engineered IP backbone for SLA-backed performance.\"</strong>"}] },
+    { cat:"Application Visibility", q:"When an app is 'slow', how do you find the root cause?", opts:[{text:"Hours of manual troubleshooting",badge:"pain",val:"Hours/Manual"},{text:"Blind once it leaves our network",badge:"risk",val:"Blind to Cloud"},{text:"Blame the ISP, can't prove it",badge:"pain",val:"ISP Blame Game"},{text:"Disconnected synthetic monitoring",badge:"legacy",val:"Disconnected"},{text:"End-to-end DEM",badge:"mature",val:"Has DEM"}], cs:[{type:"t-am",title:"Mean Time To Innocence",body:"Network teams need to prove the network is fine. DEM does this."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our SASE includes DEM, giving hop-by-hop visibility from the laptop right into the AWS server.\"</strong>"}] },
+    { cat:"Edge Hardware", q:"What is your branch hardware refresh strategy?", opts:[{text:"Spaghetti — separate routers/firewalls",badge:"pain",val:"Hardware Sprawl"},{text:"Massive hardware refresh coming",badge:"driver",val:"Impending Refresh"},{text:"Moving to a thin-edge model",badge:"driver",val:"Thin Edge Desire"},{text:"Heavy NGFWs at every site",badge:"legacy",val:"Heavy NGFW"},{text:"Consolidated SD-WAN edge box",badge:"mature",val:"Consolidated Edge"}], cs:[{type:"t-pu",title:"Thin Edge",body:"Moving from Heavy Branch to Thin Branch is the goal."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Why buy £5k firewalls for branches when you can drop in a thin SD-WAN edge and do heavy inspection in Our cloud?\"</strong>"}] },
+    { cat:"QoS & Voice", q:"How do you ensure QoS for Teams/Zoom over commodity internet?", opts:[{text:"Can't — VoIP is jittery",badge:"pain",val:"Jittery VoIP"},{text:"Force voice over MPLS",badge:"legacy",val:"MPLS Voice Only"},{text:"Basic SD-WAN QoS struggles",badge:"pain",val:"Weak QoS"},{text:"Rely on untrusted ISPs",badge:"risk",val:"Untrusted ISP"},{text:"Sub-second packet steering",badge:"mature",val:"Good QoS"}], cs:[{type:"t-cy",title:"The Middle Mile",body:"Commodity internet drops packets. MSP protects real-time traffic."},{type:"t-ac",title:"Talk Track",body:"<strong>\"If {{competitor}} just provides the box, who fixes internet congestion? MSP controls the middle-mile to guarantee voice quality.\"</strong>"}] },
+    { cat:"Cloud On-Ramps", q:"How are you connecting to major cloud providers (AWS, Azure)?", opts:[{text:"IPsec tunnels (inconsistent)",badge:"pain",val:"IPsec Internet"},{text:"Backhaul to DC ExpressRoute",badge:"legacy",val:"DC Backhaul"},{text:"Expensive direct connects everywhere",badge:"pain",val:"Direct Connects"},{text:"Looking for multicloud transit",badge:"driver",val:"Transit Need"},{text:"Cloud-native SD-WAN fabric",badge:"mature",val:"Cloud Fabric"}], cs:[{type:"t-am",title:"Cloud Networking",body:"MSP PoPs sit adjacent to major clouds."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our SD-WAN gateways are co-located with Azure/AWS. Ride our backbone straight into the cloud provider's front door.\"</strong>"}] },
+    { cat:"BGP & Routing Complexity", q:"How are you managing complex routing updates across your global estate?", opts:[{text:"Manual BGP config per router",badge:"pain",val:"Manual BGP"},{text:"Route reflectors are fragile",badge:"risk",val:"Fragile RR"},{text:"Relying on legacy OSPF/EIGRP",badge:"legacy",val:"Legacy Protocols"},{text:"Moving to centralized controllers",badge:"driver",val:"Central Controller"},{text:"Fully intent-based routing",badge:"mature",val:"Intent Based"}], cs:[{type:"t-rd",title:"Intent Based Networking",body:"Move from CLI to intent-based UI."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our SD-WAN abstracts the BGP complexity. You define the business intent, and the fabric programs the routing globally.\"</strong>"}] },
+    { cat:"Last-Mile Resilience", q:"How are you handling last-mile connectivity failures at critical sites?", opts:[{text:"Active/Passive (backup idle)",badge:"legacy",val:"Active/Passive"},{text:"Manual failover",badge:"pain",val:"Manual Failover"},{text:"4G backup but it's unreliable",badge:"risk",val:"Poor 4G"},{text:"Looking for Active/Active",badge:"driver",val:"Active/Active"},{text:"Sub-second failover with FEC",badge:"mature",val:"Sub-second"}], cs:[{type:"t-gn",title:"Active/Active ROI",body:"Make them use the bandwidth they pay for."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP SD-WAN uses Active/Active circuits with Forward Error Correction. If a link degrades, packets are duplicated so voice calls never drop.\"</strong>"}] },
+    { cat:"Internet Breakout", q:"What is the security risk of your current local internet breakout strategy?", opts:[{text:"We don't do it—all backhauled",badge:"legacy",val:"Backhauled"},{text:"Break out with no security",badge:"risk",val:"Unsecured"},{text:"Manage complex branch firewalls",badge:"pain",val:"Branch FWs"},{text:"Moving to cloud SWG",badge:"driver",val:"Cloud SWG"},{text:"Fully integrated SSE",badge:"mature",val:"Integrated SSE"}], cs:[{type:"t-pu",title:"Direct to Net",body:"Local breakout requires cloud security."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP pushes branch traffic securely to our cloud nodes, giving fast local breakout without the cost of a physical branch firewall.\"</strong>"}] },
+    { cat:"IPSec Overhead", q:"How much throughput are you losing to IPSec encryption overhead on edge routers?", opts:[{text:"Losing 30-40% of capacity",badge:"pain",val:"High Overhead"},{text:"Maxing out CPU on firewalls",badge:"pain",val:"CPU Maxed"},{text:"Buy oversized boxes to compensate",badge:"legacy",val:"Oversized Boxes"},{text:"Evaluating lightweight wireguard",badge:"driver",val:"Eval Alternatives"},{text:"Optimized SD-WAN encryption",badge:"mature",val:"Optimized"}], cs:[{type:"t-am",title:"Encryption Penalty",body:"Legacy VPNs kill router CPUs."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our SD-WAN edge devices are purpose-built for high-throughput encryption, ensuring you get the bandwidth you pay for.\"</strong>"}] },
+    { cat:"Network Analytics", q:"How proactive is your network analytics—do you know an outage is happening before users do?", opts:[{text:"No, users tell us first",badge:"pain",val:"Reactive"},{text:"Flooded with SNMP traps",badge:"pain",val:"SNMP Noise"},{text:"Basic up/down polling",badge:"legacy",val:"Basic Polling"},{text:"Implementing AIOps",badge:"driver",val:"AIOps"},{text:"Full predictive AIOps deployed",badge:"mature",val:"AIOps Deployed"}], cs:[{type:"t-cy",title:"Proactive Support",body:"AIOps changes the game for network managers."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our managed service uses AIOps to detect brownouts before they become blackouts, automatically steering traffic away from degrading links.\"</strong>"}] },
+    { cat:"IPv6 Transition", q:"How is your network architecture handling the transition to IPv6?", opts:[{text:"Drowning in complex NAT rules",badge:"pain",val:"NAT Nightmare"},{text:"Ignoring it for now",badge:"risk",val:"Ignoring"},{text:"Dual-stacking overhead",badge:"pain",val:"Dual Stack Pain"},{text:"Looking for abstract fabric",badge:"driver",val:"Seeking Abstraction"},{text:"Fully IPv6 capable fabric",badge:"mature",val:"IPv6 Ready"}], cs:[{type:"t-rd",title:"Underlay Abstraction",body:"SD-WAN abstracts IP complexity."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our SD-WAN overlay operates independently of the underlay IP version, vastly simplifying your transition strategy.\"</strong>"}] },
+    { cat:"Co-Management", q:"What level of control do you need to retain in a managed network service?", opts:[{text:"Full read/write CLI access",badge:"pain",val:"CLI Control"},{text:"Portal access for policy changes",badge:"driver",val:"Portal Policies"},{text:"Want MSP to do everything",badge:"driver",val:"Full Outsource"},{text:"Read-only visibility is fine",badge:"legacy",val:"Read Only"},{text:"API integration to our tools",badge:"mature",val:"API Integration"}], cs:[{type:"t-gn",title:"Fear of Losing Control",body:"Network managers hate 'black box' MSPs."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP offers a co-managed portal. You can push QoS and routing changes instantly, while we monitor physical circuits 24/7.\"</strong>"}] }
+  ],
+  "Security Manager": [
+    { cat:"ZTNA vs VPN", q:"What is the biggest frustration with your legacy VPNs today?", opts:[{text:"Excessive implicit trust (lateral movement)",badge:"risk",val:"Lateral Movement"},{text:"Poor user experience and disconnects",badge:"pain",val:"Poor UX"},{text:"Hardware limits / concentrator choke",badge:"pain",val:"Hardware Choke"},{text:"No context-awareness (device health)",badge:"risk",val:"No Posture"},{text:"Fully replaced with ZTNA",badge:"mature",val:"Full ZTNA"}], cs:[{type:"t-rd",title:"VPN Attack Surface",body:"VPNs put users ON the network. ZTNA connects to APPS."},{type:"t-ac",title:"Talk Track",body:"<strong>\"If a laptop is infected at an airport, your VPN lets them right in. Our ZTNA checks posture continuously before granting app access.\"</strong>"}] },
+    { cat:"DLP", q:"How do you prevent sensitive data leaving via shadow IT?", opts:[{text:"No visibility into personal clouds",badge:"risk",val:"No Cloud Vis"},{text:"Heavy endpoint DLP breaks often",badge:"pain",val:"Heavy DLP"},{text:"On-prem proxy misses off-network",badge:"legacy",val:"On-Prem Proxy"},{text:"Basic DNS blocking (easily bypassed)",badge:"pain",val:"DNS Block"},{text:"Inline CASB with DLP",badge:"mature",val:"Inline CASB"}], cs:[{type:"t-pu",title:"Shadow IT Exposure",body:"Terrified of ChatGPT / personal OneDrive data leaks."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP Managed SASE sits inline. We identify shadow IT instantly and apply DLP policies to prevent sensitive {{industry}} data leaks.\"</strong>"}] },
+    { cat:"Branch Security", q:"How is security enforced at branches for direct internet traffic?", opts:[{text:"Force all traffic back to HQ",badge:"pain",val:"Backhaul"},{text:"Physical firewalls at every branch",badge:"legacy",val:"Branch FWs"},{text:"Unsecured local ISP breakouts",badge:"risk",val:"Unsecured"},{text:"Endpoint agent only",badge:"risk",val:"Endpoint Only"},{text:"Traffic routes to Cloud SWG",badge:"mature",val:"Cloud SWG"}], cs:[{type:"t-cy",title:"Thin Edge Advantage",body:"Maintaining branch firewalls is a patching nightmare."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Imagine never patching a branch firewall again. MSP pushes branch internet straight into our cloud gateways for enterprise security globally.\"</strong>"}] },
+    { cat:"Decryption & SSL", q:"With 90%+ web traffic encrypted, how are you inspecting it?", opts:[{text:"We don't — firewalls melt",badge:"pain",val:"FW Melt"},{text:"Privacy policies prevent it",badge:"legacy",val:"Privacy"},{text:"Only decrypt known-bad categories",badge:"risk",val:"Partial Decrypt"},{text:"Endpoint decryption kills CPU",badge:"pain",val:"CPU Drain"},{text:"Cloud-scale decryption",badge:"mature",val:"Cloud Decrypt"}], cs:[{type:"t-am",title:"Inspection Blind Spot",body:"No SSL inspection = blind to 90% of malware."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our cloud-native architecture decrypts at scale in the cloud, giving full visibility with zero performance hit to your edge.\"</strong>"}] },
+    { cat:"Incident Response", q:"When an IOC triggers, how coordinated is the response?", opts:[{text:"Manual emails to block IPs",badge:"pain",val:"Manual Emails"},{text:"Endpoint isolation only",badge:"risk",val:"Endpoint Iso"},{text:"Global FW changes take 24+ hrs",badge:"pain",val:"Slow Changes"},{text:"Building SOAR playbooks",badge:"driver",val:"Building SOAR"},{text:"Automated network quarantine",badge:"mature",val:"Auto Quarantine"}], cs:[{type:"t-gn",title:"Unified Value",body:"SASE means instant, global policy updates."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP Managed SASE detects a threat at the edge and instantly quarantines the SD-WAN segment, cutting off lateral movement automatically.\"</strong>"}] },
+    { cat:"Identity Integration", q:"How deeply integrated is your network security with your Identity Provider?", opts:[{text:"It isn't — IP-based rules only",badge:"risk",val:"IP Rules Only"},{text:"Clunky LDAP syncs",badge:"legacy",val:"Clunky LDAP"},{text:"SAML for VPN login only",badge:"pain",val:"SAML VPN Only"},{text:"Moving to continuous identity auth",badge:"driver",val:"Moving to Identity"},{text:"Fully integrated IdP with context",badge:"mature",val:"Fully Integrated"}], cs:[{type:"t-cy",title:"Identity is the Perimeter",body:"Modern security uses identity, not IPs."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP SASE integrates directly with your IdP. We write policies based on 'User Group' and 'Device Posture', not static IP addresses.\"</strong>"}] },
+    { cat:"FWaaS vs Appliance", q:"What is preventing you from moving your Next-Gen Firewalls to the cloud?", opts:[{text:"Concerned about cloud latency",badge:"pain",val:"Latency Fear"},{text:"Sunk cost in current hardware",badge:"legacy",val:"Sunk Cost"},{text:"Regulatory compliance fears",badge:"risk",val:"Reg Fears"},{text:"Currently evaluating FWaaS",badge:"driver",val:"Evaluating FWaaS"},{text:"Already migrated to FWaaS",badge:"mature",val:"Migrated to FWaaS"}], cs:[{type:"t-pu",title:"The Cloud Shift",body:"FWaaS scales infinitely; hardware doesn't."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our Firewall-as-a-Service scales dynamically. You never have to oversize hardware to handle traffic spikes again.\"</strong>"}] },
+    { cat:"Threat Hunting", q:"How proactive is your team at hunting threats across network and cloud environments?", opts:[{text:"No time, purely reactive",badge:"risk",val:"Reactive Only"},{text:"Search logs manually when asked",badge:"pain",val:"Manual Search"},{text:"Rely on basic IDS/IPS signatures",badge:"legacy",val:"Signatures Only"},{text:"Looking for AI-assisted hunting",badge:"driver",val:"Seeking AI"},{text:"Proactive threat hunting program",badge:"mature",val:"Proactive Program"}], cs:[{type:"t-rd",title:"Proactive vs Reactive",body:"Most teams are too busy to hunt."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our Managed SOC doesn't just wait for alarms. Our analysts proactively hunt for anomalies in your {{industry}} traffic using global threat intel.\"</strong>"}] },
+    { cat:"Policy Drift", q:"How do you ensure firewall policies don't become bloated over time?", opts:[{text:"We don't — our rulebase is a mess",badge:"risk",val:"Messy Rulebase"},{text:"Manual audits once a year",badge:"legacy",val:"Annual Audits"},{text:"Use third-party cleanup tools",badge:"pain",val:"3rd Party Tools"},{text:"Moving to centralized intent policies",badge:"driver",val:"Central Intent"},{text:"Automated policy lifecycle",badge:"mature",val:"Automated Lifecycle"}], cs:[{type:"t-am",title:"Rule Bloat",body:"Legacy firewalls accumulate thousands of dead rules."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP SASE uses a centralized, object-based policy engine. If a user changes roles, access rights update instantly across the globe.\"</strong>"}] },
+    { cat:"Zero Day Protection", q:"How do you protect users from zero-day phishing or uncategorized malicious websites?", opts:[{text:"Standard URL filtering",badge:"legacy",val:"Standard URL"},{text:"Block all 'uncategorized' (users complain)",badge:"pain",val:"Block Uncategorized"},{text:"Rely on email security only",badge:"risk",val:"Email Only"},{text:"Evaluating Remote Browser Isolation",badge:"driver",val:"Eval RBI"},{text:"Inline sandbox and RBI deployed",badge:"mature",val:"RBI Deployed"}], cs:[{type:"t-cy",title:"Browser Isolation",body:"RBI is the ultimate zero-day defense."},{type:"t-ac",title:"Talk Track",body:"<strong>\"With MSP's Remote Browser Isolation, risky {{industry}} sites are executed in a secure cloud container. Zero code touches their laptop.\"</strong>"}] },
+    { cat:"Third-Party Risk", q:"How are you securing API and network connections to your third-party suppliers?", opts:[{text:"Site-to-site VPNs (too much access)",badge:"risk",val:"S2S VPN"},{text:"Whitelist their IPs (hard to manage)",badge:"legacy",val:"IP Whitelist"},{text:"No dedicated controls",badge:"risk",val:"No Controls"},{text:"Looking for B2B ZTNA",badge:"driver",val:"B2B ZTNA"},{text:"Strict API gateways and ZTNA",badge:"mature",val:"Strict Gateways"}], cs:[{type:"t-gn",title:"Supply Chain Risk",body:"Third-party breaches are devastating."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP allows you to establish micro-tunnels to suppliers. They access the one database they need, without ever seeing your broader network.\"</strong>"}] },
+    { cat:"Managed SOC", q:"What is your strategy for monitoring SASE alerts out-of-hours?", opts:[{text:"Best-effort to an on-call engineer",badge:"risk",val:"On-Call"},{text:"Ignore until next morning",badge:"risk",val:"9-to-5"},{text:"Managed SIEM but they don't remediate",badge:"pain",val:"Alert Only MSP"},{text:"Want to co-manage with an expert partner",badge:"driver",val:"Co-Managed SOC"},{text:"Mature 24/7 internal SOC",badge:"mature",val:"Internal 24/7"}], cs:[{type:"t-pu",title:"MSP Security Wrap",body:"Who watches the screens at 3 AM?"},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our global SOC monitors the telemetry 24/7, filtering noise and only waking your team for verified incidents.\"</strong>"}] }
+  ],
+  "NOC/SOC Analyst": [
+    { cat:"Visibility & Operations", q:"When an alert fires, what does the investigation workflow look like?", opts:[{text:"Correlate across 5+ consoles",badge:"pain",val:"Tool Fragmentation"},{text:"High alert fatigue",badge:"risk",val:"Alert Fatigue"},{text:"No visibility into branch traffic",badge:"risk",val:"No Branch Vis"},{text:"Slow escalation to network team",badge:"pain",val:"Slow Escalation"},{text:"Good tooling, lack threat intel",badge:"pivot",val:"No Threat Intel"}], cs:[{type:"t-ac",title:"Analyst Talk Track",body:"<strong>\"If you had a single-pane view with automated tier-1 triage, what would that change for your team?\"</strong>"},{type:"t-gn",title:"Make a Champion",body:"Analyst buy-in is critical. Show them how this reduces their workload."}] },
+    { cat:"Log Aggregation", q:"How difficult is it to get unified logs from edge routers, firewalls, and proxies today?", opts:[{text:"Impossible, formats don't match",badge:"pain",val:"Mismatched Formats"},{text:"Takes hours to query the SIEM",badge:"pain",val:"Slow SIEM"},{text:"We miss logs from remote users",badge:"risk",val:"Missed Remote Logs"},{text:"Looking for a unified data lake",badge:"driver",val:"Seeking Data Lake"},{text:"Fully integrated and normalized",badge:"mature",val:"Normalized"}], cs:[{type:"t-cy",title:"Normalized Data",body:"SASE normalizes network and security data natively."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP SASE feeds normalized logs into your SIEM, saving you hours of parsing and formatting.\"</strong>"}] },
+    { cat:"False Positives", q:"What percentage of your daily alerts turn out to be false positives?", opts:[{text:"Over 80% — it's exhausting",badge:"pain",val:"80%+ FP"},{text:"50-80% — we ignore low priority",badge:"risk",val:"50-80% FP"},{text:"We lack tuning capabilities",badge:"legacy",val:"Can't Tune"},{text:"Implementing AI to filter noise",badge:"driver",val:"AI Filtering"},{text:"Under 20%, highly tuned",badge:"mature",val:"<20% FP"}], cs:[{type:"t-am",title:"Alert Fatigue",body:"High false positives lead to missed breaches."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our Managed SOC handles the tier-1 noise. We tune the rules so your analysts only see actionable, high-fidelity alerts.\"</strong>"}] },
+    { cat:"Network vs Security", q:"When an application fails, how often do NOC and SOC teams blame each other?", opts:[{text:"Constantly — toxic dynamic",badge:"pain",val:"Constant Blame"},{text:"Lack shared visibility to prove it",badge:"risk",val:"No Shared Vis"},{text:"Use separate ticketing systems",badge:"legacy",val:"Separate Tickets"},{text:"Trying to converge NOC and SOC",badge:"driver",val:"Converging Teams"},{text:"Operate as a unified team",badge:"mature",val:"Unified Team"}], cs:[{type:"t-pu",title:"Convergence",body:"SASE forces NOC and SOC convergence."},{type:"t-ac",title:"Talk Track",body:"<strong>\"With MSP SASE, NOC and SOC share the exact same dashboard. See the latency drop and security block on the same timeline.\"</strong>"}] },
+    { cat:"Response Automation", q:"When you identify an infected host, how quickly can you quarantine it?", opts:[{text:"Hours of manual CLI work",badge:"pain",val:"Hours/Manual"},{text:"Isolate endpoint, not network",badge:"pain",val:"Endpoint Only"},{text:"Have to wake up a network engineer",badge:"risk",val:"Wake Engineer"},{text:"Building SOAR playbooks now",badge:"driver",val:"Building SOAR"},{text:"Instant API-driven quarantine",badge:"mature",val:"Instant API"}], cs:[{type:"t-rd",title:"Time to Contain",body:"Response time is the ultimate SOC metric."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our SASE allows your SOC to click a button and instantly quarantine a host at the SD-WAN edge.\"</strong>"}] },
+    { cat:"Deep Packet Inspection", q:"If you need to analyze a suspicious payload, how easily can you access PCAPs?", opts:[{text:"Can't get PCAPs from remote branches",badge:"risk",val:"No Branch PCAP"},{text:"Requires shipping a tech to site",badge:"pain",val:"Ship Tech"},{text:"Only available at the core DC",badge:"legacy",val:"Core Only"},{text:"Evaluating cloud traffic mirroring",badge:"driver",val:"Eval Mirroring"},{text:"Instant cloud PCAP generation",badge:"mature",val:"Instant PCAP"}], cs:[{type:"t-cy",title:"Forensics",body:"Analysts need deep data for forensics."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP SASE allows you to trigger rolling packet captures from the cloud edge for any user, instantly.\"</strong>"}] },
+    { cat:"Remote Worker Blindness", q:"When users are off-VPN, how much visibility does your SOC have into their web activity?", opts:[{text:"Zero — completely blind",badge:"risk",val:"Completely Blind"},{text:"Rely on EDR logs only",badge:"pain",val:"EDR Only"},{text:"Force VPN but they bypass it",badge:"pain",val:"Bypassed VPN"},{text:"Deploying cloud proxies",badge:"driver",val:"Deploying Proxies"},{text:"Full visibility via SSE agent",badge:"mature",val:"Full Visibility"}], cs:[{type:"t-am",title:"The Dark Web",body:"Off-VPN traffic is where malware enters."},{type:"t-ac",title:"Talk Track",body:"<strong>\"The MSP SASE agent ensures all web traffic, regardless of location, is logged and inspected by the SOC.\"</strong>"}] },
+    { cat:"3AM Coverage", q:"Who is actively watching the SIEM dashboard at 3:00 AM on a Sunday?", opts:[{text:"Nobody",badge:"risk",val:"Nobody"},{text:"On-call engineer gets PagerDuty",badge:"pain",val:"On-Call"},{text:"Offshore to cheap tier-1 MSP",badge:"legacy",val:"Cheap MSP"},{text:"Looking for premium co-managed SOC",badge:"driver",val:"Seeking SOC"},{text:"Follow-the-sun internal team",badge:"mature",val:"Follow the Sun"}], cs:[{type:"t-gn",title:"Sleep Easy",body:"Analysts hate being woken up for false alarms."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP's follow-the-sun global SOC takes the night shift. We triage, verify, and only wake you for critical {{industry}} breaches.\"</strong>"}] },
+    { cat:"Threat Intelligence", q:"How quickly are new global threat indicators (IOCs) applied to branch firewalls?", opts:[{text:"Manual updates once a month",badge:"risk",val:"Monthly Manual"},{text:"Requires scheduled patch windows",badge:"legacy",val:"Patch Windows"},{text:"Inconsistent across different vendors",badge:"pain",val:"Inconsistent Vendors"},{text:"Moving to automated feeds",badge:"driver",val:"Automated Feeds"},{text:"Instant cloud sync",badge:"mature",val:"Instant Sync"}], cs:[{type:"t-pu",title:"Zero Day Defense",body:"Cloud security updates instantly globally."},{type:"t-ac",title:"Talk Track",body:"<strong>\"When Our global intel detects a new threat, the block policy is pushed to your entire SASE cloud edge in seconds.\"</strong>"}] },
+    { cat:"Tool Maintenance", q:"How much analyst time is spent maintaining security tools vs hunting threats?", opts:[{text:"Over 50% on maintenance",badge:"pain",val:"50%+ Maintenance"},{text:"Constant agent crash troubleshooting",badge:"pain",val:"Agent Crashes"},{text:"Hardware upgrades take weekends",badge:"legacy",val:"Weekend Upgrades"},{text:"Moving to SaaS security to avoid this",badge:"driver",val:"Moving to SaaS"},{text:"Zero maintenance, all SaaS",badge:"mature",val:"Zero Maintenance"}], cs:[{type:"t-cy",title:"Offload the Grind",body:"Analysts want to hunt, not patch."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP manages the infrastructure health. Your analysts do what you hired them to do: protect the business.\"</strong>"}] },
+    { cat:"Decryption Visibility", q:"Are you able to run intrusion detection (IDS/IPS) inside encrypted HTTPS tunnels?", opts:[{text:"No, blind to encrypted traffic",badge:"risk",val:"Blind to HTTPS"},{text:"Only on core datacenter links",badge:"legacy",val:"Core Only"},{text:"Breaks applications too often",badge:"pain",val:"Breaks Apps"},{text:"Looking for cloud-based inspection",badge:"driver",val:"Cloud Inspection"},{text:"Yes, via cloud SSE",badge:"mature",val:"Cloud SSE"}], cs:[{type:"t-am",title:"Encrypted Threats",body:"Malware hides in HTTPS."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP SASE decrypts, inspects for IPS/AV, and re-encrypts in the cloud, giving full payload visibility.\"</strong>"}] },
+    { cat:"Actionable Context", q:"When an alert fires for an IP, how hard is it to figure out which user/device it belongs to?", opts:[{text:"Cross-reference DHCP logs (takes ages)",badge:"pain",val:"DHCP Logs"},{text:"Impossible for remote users",badge:"risk",val:"Impossible Remote"},{text:"Ask network team and wait",badge:"pain",val:"Wait for Net Team"},{text:"Integrating IdP into SIEM",badge:"driver",val:"Integrating IdP"},{text:"Alerts contain user identity natively",badge:"mature",val:"Identity Native"}], cs:[{type:"t-gn",title:"Identity Context",body:"IP addresses are useless. Analysts need user names."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Because MSP SASE is identity-aware, every SOC alert shows you the user's name, department, and device posture instantly.\"</strong>"}] }
+  ],
+  "CFO": [
+    { cat:"Commercial & Financial Drivers", q:"When you look at your current network and security spend, what's the biggest commercial concern?", opts:[{text:"MPLS costs are too high",badge:"driver",val:"MPLS Cost"},{text:"Too many separate vendor contracts",badge:"pain",val:"Contract Sprawl"},{text:"Unpredictable CapEx refresh cycles",badge:"legacy",val:"CapEx Risk"},{text:"Rising cyber insurance premiums",badge:"risk",val:"Insurance Cost"},{text:"Want a predictable OpEx model",badge:"driver",val:"OpEx Model"}], cs:[{type:"t-ac",title:"CFO Talk Track",body:"<strong>\"The average MPLS contract costs 4-7x more per Mbps than SD-WAN. MSP customers typically see 30-45% WAN cost reduction in year one.\"</strong>"},{type:"t-am",title:"Financial Proof",body:"Lead with WAN cost reduction, consolidation savings, and CapEx to OpEx shift."}] },
+    { cat:"CapEx vs OpEx", q:"How is finance currently treating the depreciation and refresh cycles of massive network hardware?", opts:[{text:"Painful 5-year CapEx hit",badge:"pain",val:"5-Yr CapEx"},{text:"Sweating assets past EOL",badge:"risk",val:"Sweating Assets"},{text:"Lease models, but it's complex",badge:"legacy",val:"Complex Leasing"},{text:"Mandate to move strictly to OpEx",badge:"driver",val:"Strict OpEx"},{text:"Already fully OpEx/Cloud",badge:"mature",val:"Fully OpEx"}], cs:[{type:"t-pu",title:"The OpEx Shift",body:"CFOs hate lumpy CapEx."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP Managed SASE moves compute to the cloud. Stop buying depreciating hardware and consume security as a predictable monthly OpEx service.\"</strong>"}] },
+    { cat:"Vendor Consolidation", q:"How many different network, ISP, and security invoices is your AP team processing globally?", opts:[{text:"Dozens — administrative nightmare",badge:"pain",val:"Invoice Nightmare"},{text:"Multiple currencies and terms",badge:"pain",val:"Currency Mess"},{text:"Broker aggregates them",badge:"legacy",val:"Broker Aggregate"},{text:"Actively driving supplier reduction",badge:"driver",val:"Reducing Suppliers"},{text:"Single global invoice",badge:"mature",val:"Single Invoice"}], cs:[{type:"t-cy",title:"Procurement Pain",body:"Processing invoices costs money. Consolidating vendors saves hard dollars."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP consolidates underlay, SD-WAN, security, and management into a single, predictable global invoice.\"</strong>"}] },
+    { cat:"Cost of Downtime", q:"Has the business modeled the actual cost-per-minute of a critical site or app going offline?", opts:[{text:"Yes, devastatingly high",badge:"pain",val:"High Cost"},{text:"No, but outages hurt productivity",badge:"risk",val:"Hurt Productivity"},{text:"We lose direct {{industry}} revenue",badge:"pain",val:"Lost Revenue"},{text:"Looking for financially backed SLAs",badge:"driver",val:"Seeking SLAs"},{text:"Highly resilient, zero downtime",badge:"mature",val:"Highly Resilient"}], cs:[{type:"t-rd",title:"Financial SLAs",body:"Downtime is a CFO metric, not just an IT metric."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP provides a financially backed SLA on the entire end-to-end service, protecting your revenue stream.\"</strong>"}] },
+    { cat:"FTE & Talent Costs", q:"How much of your IT payroll is spent 'keeping the lights on' versus driving business innovation?", opts:[{text:"Too much — paying engineers to patch",badge:"pain",val:"Wasted Payroll"},{text:"Rely on expensive contractors",badge:"pain",val:"Expensive Contractors"},{text:"Can't hire fast enough",badge:"risk",val:"Hiring Struggle"},{text:"Outsource commodity IT",badge:"driver",val:"Outsource Commodity"},{text:"IT drives pure innovation",badge:"mature",val:"Innovation Only"}], cs:[{type:"t-am",title:"Talent Optimization",body:"Managed services redirect expensive payroll to high-value work."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our NOC and SOC act as an extension of your team, allowing you to refocus expensive talent on {{industry}} growth projects.\"</strong>"}] },
+    { cat:"Cyber Risk & Insurance", q:"How are rising cyber threats impacting your cyber insurance premiums?", opts:[{text:"Premiums doubled this year",badge:"pain",val:"Premiums Doubled"},{text:"Insurers demand ZTNA controls we lack",badge:"risk",val:"Failing Insurer Demands"},{text:"Board scrutinizing cyber spend",badge:"pain",val:"Board Scrutiny"},{text:"Investing to lower risk profile",badge:"driver",val:"Investing in Risk"},{text:"Premiums stable, excellent posture",badge:"mature",val:"Stable Premiums"}], cs:[{type:"t-gn",title:"Insurance ROI",body:"SASE can literally lower insurance premiums."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Implementing MSP's Zero Trust architecture directly addresses the top controls demanded by cyber insurers, often stabilizing premiums.\"</strong>"}] },
+    { cat:"Agility & Expansion", q:"When entering a new market or acquiring a business, how do IT costs scale?", opts:[{text:"Linear and expensive (new hardware)",badge:"pain",val:"Linear Cost"},{text:"Delayed revenue due to IT onboarding",badge:"risk",val:"Delayed Revenue"},{text:"Integration costs wipe out early ROI",badge:"pain",val:"Integration Wipes ROI"},{text:"Seeking scalable cloud models",badge:"driver",val:"Seeking Cloud Scale"},{text:"Zero-touch scale, highly predictable",badge:"mature",val:"Predictable Scale"}], cs:[{type:"t-cy",title:"Business Agility",body:"CFOs want IT costs to scale efficiently, not linearly."},{type:"t-ac",title:"Talk Track",body:"<strong>\"With MSP SASE, lighting up a new site requires zero CapEx. It's a simple per-user OpEx subscription that scales with your business.\"</strong>"}] },
+    { cat:"Sunk Costs", q:"Are there existing investments in legacy network/security holding back modernization?", opts:[{text:"Just bought new firewalls last year",badge:"legacy",val:"Recent FW Buy"},{text:"Locked in 3-year MPLS contract",badge:"legacy",val:"MPLS Lock"},{text:"Depreciation schedules dictate strategy",badge:"pain",val:"Depreciation Locked"},{text:"Looking for transition funding",badge:"driver",val:"Transition Funding"},{text:"No, greenfield/ready",badge:"mature",val:"Greenfield"}], cs:[{type:"t-pu",title:"Transition Economics",body:"MSP can sometimes help with transition economics or phased rollouts."},{type:"t-ac",title:"Talk Track",body:"<strong>\"We can build a phased commercial model that runs hybrid SD-WAN over your existing MPLS until contracts expire, avoiding double-paying.\"</strong>"}] },
+    { cat:"ROI Tracking", q:"How confident are you that previous network and security investments delivered promised ROI?", opts:[{text:"Not confident, costs keep rising",badge:"pain",val:"Costs Rising"},{text:"Buy tools but use 20% of features",badge:"pain",val:"Shelfware"},{text:"Hard to measure security ROI",badge:"risk",val:"Hard to Measure"},{text:"Demanding strict business cases",badge:"driver",val:"Strict Business Cases"},{text:"Track strict KPIs and SLAs",badge:"mature",val:"Strict KPIs"}], cs:[{type:"t-rd",title:"Anti-Shelfware",body:"CFOs hate buying software that IT doesn't deploy fully."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP Managed SASE ensures you aren't buying shelfware. We deploy and manage the platform to ensure 100% feature utilization.\"</strong>"}] },
+    { cat:"Telecom Sprawl", q:"Are you paying for unused or redundant telecom circuits globally because there is no centralized oversight?", opts:[{text:"Absolutely, shadow telecom spend",badge:"pain",val:"Shadow Telecom"},{text:"Regional teams expense their own circuits",badge:"risk",val:"Regional Expensing"},{text:"Lack global inventory",badge:"pain",val:"No Inventory"},{text:"Undertaking a global audit",badge:"driver",val:"Global Audit"},{text:"Optimized global underlay",badge:"mature",val:"Optimized Underlay"}], cs:[{type:"t-am",title:"Shadow Spend",body:"Telecom sprawl is a massive hidden cost."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP audits and consolidates your global underlay, often finding 15-20% savings by eliminating redundant shadow circuits.\"</strong>"}] },
+    { cat:"Business Case", q:"What metric will the board care about most when reviewing the business case for a network transformation?", opts:[{text:"Overall TCO reduction over 3-5 years",badge:"driver",val:"TCO Reduction"},{text:"Risk mitigation / avoiding a breach",badge:"risk",val:"Risk Mitigation"},{text:"Enabling remote work productivity",badge:"driver",val:"Productivity"},{text:"Enabling cloud/AI adoption",badge:"driver",val:"Cloud/AI Adoption"},{text:"All of the above",badge:"mature",val:"All"}], cs:[{type:"t-gn",title:"Building the Case",body:"Align the MSP pitch to their exact board metric."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our commercial team will build a board-ready TCO model comparing your current state against a MSP Managed SASE future state.\"</strong>"}] },
+    { cat:"Timeline", q:"If the financial model shows a clear 30% TCO reduction, how quickly can your organization execute on a decision?", opts:[{text:"Need 6-9 months for approvals",badge:"legacy",val:"6-9 Months"},{text:"Next budget cycle (next year)",badge:"pain",val:"Next Year"},{text:"Within 3-6 months",badge:"pivot",val:"3-6 Months"},{text:"Immediately, if ROI is proven",badge:"driver",val:"Immediately"},{text:"Already approved, selecting vendor",badge:"mature",val:"Approved"}], cs:[{type:"t-cy",title:"Qualifying the Close",body:"CFOs control the timeline."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Excellent. Let's schedule a commercial workshop to validate those TCO numbers against your actual {{industry}} environment.\"</strong>"}] }
+  ],
+  "Procurement": [
+    { cat:"Procurement Strategy", q:"What's driving your vendor evaluation process for managed network and security?", opts:[{text:"Need single accountable vendor (SLA)",badge:"driver",val:"Single SLA"},{text:"Benchmarking against frameworks",badge:"driver",val:"Frameworks"},{text:"Current provider renewal / market test",badge:"pivot",val:"Renewal Test"},{text:"Risk diversification",badge:"risk",val:"Supplier Risk"},{text:"Price benchmarking",badge:"pain",val:"Price Check"}], cs:[{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP is on major frameworks like G-Cloud, simplifying procurement. Are you aligned to a framework or running an open tender?\"</strong>"},{type:"t-cy",title:"MSP Advantage",body:"Scale, financial backing, and single-contract simplicity."}] },
+    { cat:"Vendor Lock-in", q:"How concerned are you about commercial or technical lock-in with current hardware vendors?", opts:[{text:"Very concerned — hardware refreshes force hand",badge:"pain",val:"Hardware Lock-in"},{text:"Stuck in proprietary licensing",badge:"pain",val:"Licensing Lock-in"},{text:"Use open standards to avoid this",badge:"legacy",val:"Open Standards"},{text:"Seeking hardware-agnostic cloud services",badge:"driver",val:"Seeking Cloud Services"},{text:"Run a multi-vendor best-of-breed strategy",badge:"mature",val:"Best of Breed"}], cs:[{type:"t-pu",title:"Hardware-Agnostic",body:"SASE breaks hardware lock-in."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Our Managed SASE is cloud-native. You are no longer locked into 5-year proprietary firewall hardware cycles.\"</strong>"}] },
+    { cat:"SLA Accountability", q:"When an outage occurs, how do your current contracts handle SLA penalties across multiple vendors?", opts:[{text:"Mess — vendors blame each other",badge:"risk",val:"Finger Pointing"},{text:"ISPs cover link only, not app",badge:"pain",val:"Link Only SLAs"},{text:"Rarely manage to claim service credits",badge:"pain",val:"No Credits"},{text:"Seeking end-to-end application SLAs",badge:"driver",val:"Seeking App SLAs"},{text:"Strict, enforceable single-pane SLAs",badge:"mature",val:"Strict SLAs"}], cs:[{type:"t-am",title:"One Throat to Choke",body:"Procurement hates multi-vendor SLA fights."},{type:"t-ac",title:"Talk Track",body:"<strong>\"If {{competitor}} sells software and ISP sells the link, neither guarantees the app works. MSP owns the end-to-end SLA and service credits.\"</strong>"}] },
+    { cat:"Global Billing", q:"How complex is your billing and invoicing process for your global network and security estate?", opts:[{text:"Terrible — dozens of local currencies",badge:"pain",val:"Multi-Currency Chaos"},{text:"Hard to attribute costs to business units",badge:"pain",val:"No Cost Attribution"},{text:"Constant invoice disputes",badge:"risk",val:"Invoice Disputes"},{text:"Seeking centralized global billing",badge:"driver",val:"Seeking Central Billing"},{text:"Highly streamlined via a single MSP",badge:"mature",val:"Streamlined"}], cs:[{type:"t-gn",title:"Global Scale",body:"MSP's billing capabilities are a massive differentiator."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP provides centralized, multi-currency billing. We cleanly attribute OpEx costs down to the specific branch for your finance team.\"</strong>"}] },
+    { cat:"Compliance & Legal", q:"How do you ensure vendors comply with strict {{industry}} regulations (e.g., GDPR, data sovereignty)?", opts:[{text:"Rely on generic T&Cs",badge:"risk",val:"Generic T&Cs"},{text:"Long, painful legal reviews",badge:"pain",val:"Painful Reviews"},{text:"Require local data processing agreements",badge:"legacy",val:"Local DPAs"},{text:"Seeking vendors with pre-certified compliance",badge:"driver",val:"Seeking Certified"},{text:"Mandate strict, audited compliance checks",badge:"mature",val:"Audited Checks"}], cs:[{type:"t-rd",title:"Regulatory Weight",body:"MSP is highly certified globally."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP is pre-certified for major global and regional data frameworks, radically speeding up your legal and compliance review process.\"</strong>"}] },
+    { cat:"Transition Risk", q:"When changing major network providers, what is your biggest concern regarding transition/onboarding?", opts:[{text:"Downtime impacting business ops",badge:"risk",val:"Downtime Risk"},{text:"Hidden costs and project delays",badge:"pain",val:"Hidden Costs"},{text:"Lack of dedicated project management",badge:"pain",val:"Poor PM"},{text:"Demand strict transition SLAs",badge:"driver",val:"Strict Transition SLAs"},{text:"Use dual-running to eliminate risk",badge:"mature",val:"Dual Running"}], cs:[{type:"t-cy",title:"Professional Services",body:"MSP's migration machinery is enterprise-grade."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP includes a dedicated Prince2/agile project team. We manage the global rollout schedule and ISP provisioning so you don't have to.\"</strong>"}] },
+    { cat:"Support Tiers", q:"How are your current support contracts structured for critical incidents?", opts:[{text:"Standard 8x5 support (risky)",badge:"risk",val:"8x5 Only"},{text:"Pay extra for premium tiers across 5 vendors",badge:"pain",val:"Expensive Premium"},{text:"Ticket routing takes too long",badge:"pain",val:"Slow Escalation"},{text:"Seeking unified 24/7 global support",badge:"driver",val:"Seeking 24/7 Unified"},{text:"Dedicated TAM and 24/7 coverage",badge:"mature",val:"Dedicated TAM"}], cs:[{type:"t-pu",title:"Unified Support",body:"One support number beats five."},{type:"t-ac",title:"Talk Track",body:"<strong>\"With MSP, you don't call the firewall vendor and wait. You have a direct line to MSP's 24/7 NOC/SOC for immediate Level 3 resolution.\"</strong>"}] },
+    { cat:"Coterminous Contracts", q:"Are your current network, hardware, and security contracts aligned to the same expiration date?", opts:[{text:"No, expire randomly over 3 years",badge:"pain",val:"Random Expirations"},{text:"Trying to align them now",badge:"driver",val:"Trying to Align"},{text:"Deliberately stagger them",badge:"legacy",val:"Staggered intentionally"},{text:"Buy out contracts to align them",badge:"pivot",val:"Buying Out"},{text:"Yes, fully coterminous",badge:"mature",val:"Coterminous"}], cs:[{type:"t-am",title:"Commercial Alignment",body:"MSP can help bridge contract gaps."},{type:"t-ac",title:"Talk Track",body:"<strong>\"We build commercial transition models, allowing you to deploy SASE now while gracefully retiring disparate contracts as they expire.\"</strong>"}] },
+    { cat:"Technology Roadmap", q:"How do you ensure the technology you buy today isn't obsolete in 3 years?", opts:[{text:"Constantly buy new point products",badge:"pain",val:"Constant Buying"},{text:"Rely on 'forklift' hardware upgrades",badge:"legacy",val:"Forklift Upgrades"},{text:"Version locked due to upgrade fear",badge:"risk",val:"Version Lock"},{text:"Seeking evergreen cloud platforms",badge:"driver",val:"Seeking Evergreen"},{text:"Cloud-native subscription model",badge:"mature",val:"Evergreen SaaS"}], cs:[{type:"t-gn",title:"Evergreen IT",body:"SASE is constantly updated in the cloud."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP Managed SASE is an 'evergreen' service. New zero-day protections or features are pushed to your service automatically.\"</strong>"}] },
+    { cat:"ESG & Sustainability", q:"How important are sustainability and carbon footprint metrics in your vendor selection criteria?", opts:[{text:"Not considered currently",badge:"legacy",val:"Not Considered"},{text:"Nice to have, but price wins",badge:"pivot",val:"Nice to Have"},{text:"Need basic ESG reporting",badge:"driver",val:"Basic ESG"},{text:"Mandatory weighted criteria in RFPs",badge:"driver",val:"Mandatory RFP"},{text:"Actively track Scope 3 emissions",badge:"mature",val:"Scope 3 Tracking"}], cs:[{type:"t-rd",title:"MSP's Green Credentials",body:"MSP is a leader in corporate sustainability."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP is committed to net zero. Moving from hundreds of power-hungry branch firewalls to MSP's efficient cloud PoPs reduces Scope 3 emissions.\"</strong>"}] },
+    { cat:"Proof of Concept", q:"What are your requirements for a Proof of Concept (PoC) before signing a contract?", opts:[{text:"We don't do PoCs, too much effort",badge:"risk",val:"No PoCs"},{text:"Test hardware in a lab",badge:"legacy",val:"Lab Only"},{text:"Need live pilot in 2-3 branches",badge:"driver",val:"Live Pilot"},{text:"Demand vendor funds the PoC",badge:"pain",val:"Vendor Funded"},{text:"Strict success criteria mapped to outcomes",badge:"mature",val:"Strict Criteria"}], cs:[{type:"t-cy",title:"Proving Value",body:"Define success early."},{type:"t-ac",title:"Talk Track",body:"<strong>\"MSP welcomes a live pilot. We define strict success criteria—like failover speed and threat detection—and prove it in your real {{industry}} environment.\"</strong>"}] },
+    { cat:"Decision Process", q:"Who holds the ultimate sign-off for a transformation project of this scale?", opts:[{text:"IT decides, Procurement executes",badge:"legacy",val:"IT Led"},{text:"CFO requires a hard ROI business case",badge:"pain",val:"CFO ROI Focus"},{text:"CISO has veto power over network team",badge:"risk",val:"CISO Veto"},{text:"Cross-functional steering committee",badge:"driver",val:"Committee"},{text:"Board-level strategic initiative",badge:"mature",val:"Board Level"}], cs:[{type:"t-pu",title:"Stakeholder Mapping",body:"Know who you are really selling to."},{type:"t-ac",title:"Talk Track",body:"<strong>\"Since the CFO and CISO are involved, MSP provides an Executive Briefing that strips out technical jargon and focuses purely on financial ROI and risk mitigation.\"</strong>"}] }
+  ]
+};
+
+// Generic Fallback Track for safety
+const GENERIC_DEMO_TRACK = [
+  { cat:"Strategy", q:"How is your infrastructure supporting goals?", opts:[{text:"Holding back",badge:"pain",val:"1"},{text:"Expensive",badge:"driver",val:"2"},{text:"Risk limited",badge:"risk",val:"3"},{text:"Modernising",badge:"pivot",val:"4"},{text:"Aligned",badge:"mature",val:"5"}], cs:[{type:"t-ac",title:"Info",body:"Probe impact."}] }
+];
+
+/* ═══════════════════════════════════════
+   CORE LOGIC & UI
+═══════════════════════════════════════ */
+function onPersonaChange() {
+  const v = document.getElementById('persona')?.value;
+  const card = document.getElementById('personaCard');
+  const badge = document.getElementById('personaBadge');
+  
+  if (!v) { 
+    if(card) card.style.display='none'; 
+    if(badge) badge.classList.add('hidden'); 
+    return; 
+  }
+  
+  const p = PERSONAS[v];
+  if(!p) return;
+
+  const pIcon = document.getElementById('personaIcon');
+  const pRole = document.getElementById('personaRole');
+  const pFocus = document.getElementById('personaFocus');
+  const pText = document.getElementById('pbText');
+  
+  if(pIcon) pIcon.textContent = p.icon;
+  if(pRole) pRole.textContent = p.role;
+  if(pFocus) pFocus.textContent = p.focus;
+  if(card) card.style.display = 'flex';
+  if(pText) pText.textContent = v;
+  if(badge) badge.classList.remove('hidden');
+  
+  currentQ = p.firstQ;
+  updateCtx();
+  handleStart();
+}
+
+function handleStart() {
+    const persona = document.getElementById('persona')?.value;
+    if(!persona) return;
+    
+    // Reset session state for new persona
+    history = [];
+    tempSel = { val: null, text: null };
+    
+    // If no API key, auto-engage demo mode
+    if(!gkey) {
+        const status = document.getElementById('aiStatus');
+        const dot = document.getElementById('aiDot');
+        if(status && !status.textContent.includes('Demo')) status.textContent = 'Demo Mode — Pre-scripted';
+        if(dot) dot.style.cssText = 'background:var(--am);box-shadow:0 0 8px var(--am)';
+    }
+
+    const startState = document.getElementById('startState');
+    const wizWrap = document.getElementById('wizWrap');
+    if(startState) startState.style.display = 'none';
+    if(wizWrap) wizWrap.style.display = 'flex';
+    
+    // Reset report view in case they're restarting
+    const reportView = document.getElementById('reportView');
+    const appLayout = document.getElementById('appLayout');
+    if(reportView) reportView.classList.remove('show');
+    if(appLayout) appLayout.style.display = 'grid';
+    
+    // Reset generate button
+    const genBtn = document.getElementById('genBtn');
+    const genWrap = document.getElementById('genWrapDiv');
+    const reportBox = document.getElementById('reportBox');
+    if(genBtn) { genBtn.disabled=false; genBtn.innerHTML='⚡ Generate Executive Strategy Brief'; }
+    if(genWrap) genWrap.style.display='block';
+    if(reportBox && reportBox.querySelector('.ai-box')) reportBox.querySelector('.ai-box').remove();
+    
+    renderUI();
+}
+
+function updateCtx() {
+  const name = document.getElementById('pName')?.value || '';
+  const ind = document.getElementById('ind')?.value || '';
+  const net = document.getElementById('net')?.value || '';
+  const sec = document.getElementById('sec')?.value || '';
+  const sites = parseInt(document.getElementById('sites')?.value) || 0;
+  const btRel = document.getElementById('btRel')?.value || '';
+  const comp = document.getElementById('comp')?.value || '';
+  const persona = document.getElementById('persona')?.value || '';
+  
+  const nameLabel = document.getElementById('nameLabel');
+  if(nameLabel) nameLabel.textContent = name;
+  
+  let sa=0,sw=0,su=0;
+  if(net.includes('MPLS-only')){sw+=38;su+=32;sa+=12;}
+  else if(net.includes('MPLS + Internet')){sw+=28;su+=22;sa+=18;}
+  else if(net.includes('Legacy SD-WAN')){sw+=32;sa+=28;}
+  else if(net.includes('Internet-only')){sw+=15;sa+=22;}
+  else if(net.includes('Hybrid')){sw+=20;sa+=20;su+=15;}
+  
+  if(sec.includes('Compliance')){sa+=28;sw+=8;}
+  else if(sec.includes('Strong')){sa+=20;}
+  else if(sec.includes('Moderate')){sa+=15;sw+=5;}
+  else if(sec.includes('Basic')){sa+=10;sw+=8;}
+  
+  if(['Financial Services','Healthcare','Government'].some(v=>ind.includes(v))){sa+=20;sw+=8;}
+  else if(ind==='Manufacturing'){su+=15;sw+=12;sa+=10;}
+  else if(ind.includes('Retail')){sw+=14;sa+=12;su+=10;}
+  
+  if(sites>100){su+=35;sw+=12;}else if(sites>50){su+=28;sw+=14;}else if(sites>20){su+=18;sw+=16;}else if(sites>5){su+=8;sw+=10;}
+  
+  if(btRel==='underlay'){sa+=22;sw+=26;}
+  else if(btRel==='security'){sa+=28;sw+=10;}
+  else if(btRel==='both'){sa+=32;sw+=22;su+=12;}
+  
+  sa=Math.min(sa,99);sw=Math.min(sw,99);su=Math.min(su,99);
+  const has=sa>0||sw>0||su>0;
+  
+  const svS = document.getElementById('sv-s');
+  const svW = document.getElementById('sv-w');
+  const svU = document.getElementById('sv-u');
+  if(svS) svS.textContent=has?sa:'--';
+  if(svW) svW.textContent=has?sw:'--';
+  if(svU) svU.textContent=has?su:'--';
+  
+  ['s','w','u'].forEach((k,i)=>{
+    const card = document.getElementById('sc-'+k);
+    if(card) {
+        card.className='sc';
+        if(has&&[sa,sw,su][i]>=35) card.classList.add(['l-ac','l-gn','l-cy'][i]);
+    }
+  });
+  
+  const bars = document.getElementById('bars');
+  if(has){
+    if(bars) bars.style.display='block';
+    [['s',sa],['w',sw],['u',su]].forEach(([k,v])=>{
+      const bf = document.getElementById('bf-'+k);
+      const bl = document.getElementById('bl-'+k);
+      if(bf) bf.style.width=v+'%';
+      if(bl) bl.textContent=v+'%';
+    });
+    
+    const verd=document.getElementById('verdict');
+    const vt=document.getElementById('vt');
+    if(verd && vt) {
+        verd.className='verdict show';
+        if(sa>=55){verd.classList.add('vst');vt.textContent='✦ Strong SASE candidate — lead with Zero Trust & SSE pitch';}
+        else if(sa>=35||sw>=45){verd.classList.add('vmd');vt.textContent='◆ Good SD-WAN + SASE opportunity — qualify security maturity further';}
+        else{verd.classList.add('vlw');vt.textContent='◇ Early-stage — focus on network modernisation as the entry point';}
+        verd.classList.remove('hidden');
+    }
+  } else {
+    if(bars) bars.style.display='none';
+    const verd = document.getElementById('verdict');
+    if(verd) verd.classList.add('hidden');
+  }
+  
+  const tags=[];
+  if(persona)tags.push({t:`Persona: ${persona}`,c:'t-pu'});
+  if(sa>=45)tags.push({t:'SASE Ready',c:'t-ac'});
+  if(sw>=40)tags.push({t:'SD-WAN Fit',c:'t-gn'});
+  if(su>=35)tags.push({t:'Underlay Opp',c:'t-cy'});
+  if(btRel&&btRel!=='new')tags.push({t:'MSP Install Base',c:'t-gn'});
+  if(net.includes('MPLS'))tags.push({t:'MPLS Rip & Replace',c:'t-am'});
+  if(['Financial Services','Healthcare','Government'].some(v=>ind.includes(v)))tags.push({t:'Compliance Driver',c:'t-rd'});
+  if(comp)tags.push({t:'vs '+comp,c:'t-pu'});
+  
+  const tagsEl = document.getElementById('ctx-tags');
+  if(tagsEl) tagsEl.innerHTML=tags.map(x=>`<span class="tag ${x.c}">${x.t}</span>`).join('');
+  
+  if (currentQ) renderCheatSheet(currentQ);
+}
+
+function getCtxBlock(){
+  return [
+    `Company: ${document.getElementById('pName')?.value||'Unknown'}`,
+    `Industry: ${document.getElementById('ind')?.value||'Unknown'}`,
+    `Sites: ${document.getElementById('sites')?.value||'Unknown'}`,
+    `Users: ${document.getElementById('users')?.value||'Unknown'}`,
+    `WAN/Network: ${document.getElementById('net')?.value||'Unknown'}`,
+    `Security Posture: ${document.getElementById('sec')?.value||'Unknown'}`,
+    `MSP Relationship: ${document.getElementById('btRel')?.options[document.getElementById('btRel')?.selectedIndex]?.text||'Unknown'}`,
+    `Persona: ${document.getElementById('persona')?.value||'Unknown'}`,
+    `Competitor Mentioned: ${document.getElementById('comp')?.value||'None'}`
+  ].join('\n');
+}
+
+function renderUI(){
+  const q=currentQ; if(!q)return;
+  const qn=history.length+1;
+  
+  const wizCat = document.getElementById('wizCat');
+  const wizLbl = document.getElementById('wizLbl');
+  const ringNum = document.getElementById('ringNum');
+  const wizQ = document.getElementById('wizQ');
+  const wizNotes = document.getElementById('wizNotes');
+  const ringFill = document.getElementById('ringFill');
+  const bn = document.getElementById('btnNext');
+  const btnFin = document.getElementById('btnFin');
+  const dots = document.getElementById('qdots');
+  const oc = document.getElementById('wizOpts');
+  
+  if(wizCat) wizCat.textContent=q.cat;
+  if(wizLbl) wizLbl.textContent=`Question ${qn} of ${MAX_Q}`;
+  if(ringNum) ringNum.textContent=qn;
+  
+  let displayQ = q.q;
+  const ind = document.getElementById('ind')?.value || '';
+  const comp = document.getElementById('comp')?.value || '';
+  displayQ = displayQ.replace(/{{industry}}/g, ind !== 'Select...' && ind !== 'General Enterprise' && ind !== '' ? ind : 'enterprise');
+  displayQ = displayQ.replace(/{{competitor}}/g, comp || 'competitors');
+  if(wizQ) wizQ.textContent = displayQ;
+  
+  if(wizNotes) wizNotes.value='';
+  const pct=Math.min((qn-1)/MAX_Q,1);
+  if(ringFill) ringFill.style.strokeDashoffset=150-(pct*150);
+  
+  tempSel={val:null,text:null};
+  
+  if(bn) {
+    bn.disabled=true; 
+    bn.className='btn btn-p'; 
+    bn.textContent='Select an answer to continue';
+  }
+  
+  if(history.length>=2 && btnFin) btnFin.classList.remove('hidden');
+  
+  if(dots) {
+    dots.innerHTML='';
+    for(let i=0;i<MAX_Q;i++){
+        const d=document.createElement('div');
+        d.className='qdot'+(i<history.length?' dn':i===history.length?' ac2':'');
+        dots.appendChild(d);
+    }
+  }
+  
+  if(oc) {
+    oc.innerHTML='';
+    q.opts.forEach((opt,i)=>{
+      const b=document.createElement('button'); b.className='opt';
+      const bm={risk:'ob-risk',legacy:'ob-legacy',mature:'ob-mature',driver:'ob-driver',pivot:'ob-pivot',pain:'ob-pain'};
+      b.innerHTML=`<div class="opt-ind"><div class="opt-chk"></div></div><span style="flex:1">${opt.text}</span><span class="ob ${bm[opt.badge]||'ob-pain'}">${opt.badge||''}</span>`;
+      b.onclick=()=>selectOpt(i,opt.val,opt.text,oc);
+      oc.appendChild(b);
+    });
+  }
+  
+  renderCheatSheet(q);
+  renderTimeline();
+}
+
+function renderCheatSheet(q){
+  const cs=document.getElementById('cheatSheet'); 
+  if(!cs || !q) return;
+  cs.innerHTML='';
+  
+  if(q.cs) {
+    q.cs.forEach(c=>{
+      const ind = document.getElementById('ind')?.value || '';
+      const comp = document.getElementById('comp')?.value || '';
+      let bodyText = c.body.replace(/{{industry}}/g, ind !== 'Select...' && ind !== 'General Enterprise' && ind !== '' ? ind : 'enterprise');
+      bodyText = bodyText.replace(/{{competitor}}/g, comp || 'competitors');
+      cs.innerHTML+=`<div class="cs-card ${c.type}"><div class="cs-title">${c.title}</div><div class="cs-body">${bodyText}</div></div>`;
+    });
+  }
+  
+  const comp=document.getElementById('comp')?.value;
+  if(comp&&BATTLECARDS[comp]){
+    const bc=BATTLECARDS[comp];
+    cs.innerHTML+=`<div class="bc"><div class="bc-hdr"><span class="bc-name">⚔ vs ${comp}</span><span class="bc-badge">Battlecard</span></div><div class="bc-body"><div class="bc-row"><span class="bc-ico">⚠</span><div class="bc-txt"><strong>Weakness:</strong> ${bc.weakness}</div></div><div class="bc-row"><span class="bc-ico">✦</span><div class="bc-txt"><strong>MSP Win Angle:</strong> ${bc.msp_win}</div></div><div class="bc-row"><span class="bc-ico">🪤</span><div class="bc-txt"><strong>Trap Question:</strong> ${bc.trap}</div></div></div></div>`;
+  }
+}
+
+function renderTimeline(){
+  const tl=document.getElementById('timeline'); 
+  if(!tl) return;
+  tl.innerHTML='';
+  
+  history.forEach((item,i)=>{
+    tl.innerHTML+=`<div class="tl-item done"><div class="tl-cat">${item.cat}</div><div class="tl-num">Q${i+1}</div><div class="tl-ans">${item.answerText}</div></div>`;
+  });
+  
+  if(currentQ){
+      tl.innerHTML+=`<div class="tl-item active" id="activeTL"><div class="tl-cat">${currentQ.cat}</div><div class="tl-num">Q${history.length+1}</div><div class="tl-ans emp" id="activeTLAns">Awaiting answer…</div></div>`;
+  }
+  const tlContainer = document.querySelector('.panel .pb');
+  if(tlContainer) tlContainer.scrollTop = tlContainer.scrollHeight;
+}
+
+function selectOpt(idx,val,text,container){
+  tempSel={val,text};
+  if(container) {
+    Array.from(container.children).forEach((b,i)=>b.classList.toggle('sel',i===idx));
+  }
+  const bn=document.getElementById('btnNext');
+  if(bn) {
+      bn.disabled=false; 
+      bn.className='btn btn-p rdy';
+      
+      const isDemoMode = !gkey; // If no key exists, it's definitely demo mode.
+      let nextText = isDemoMode ? 'Next Question →' : 'Generate Next AI Question →';
+      const isLastQ = (history.length + 1) >= MAX_Q;
+      bn.textContent = isLastQ ? 'Finish & Build Pitch ✦' : nextText;
+  }
+  const a=document.getElementById('activeTLAns');
+  if(a){a.className='tl-ans';a.textContent=text;}
+}
+
+async function handleNext(){
+  const isDemoMode = !gkey;
+  
+  if(!tempSel.val) return; // Safety guard
+  
+  const notes=document.getElementById('wizNotes')?.value.trim() || '';
+  history.push({cat:currentQ.cat,q:currentQ.q,answerVal:tempSel.val,answerText:tempSel.text,notes});
+  
+  if(history.length>=MAX_Q){goReport();return;}
+  
+  const loader = document.getElementById('loader');
+  if(loader) loader.classList.add('on');
+  
+  if(isDemoMode) { 
+      await processDemoMode(); 
+  } else { 
+      await fetchNext(); 
+  }
+}
+
+async function processDemoMode() {
+    await new Promise(r => setTimeout(r, 600));
+    const persona = document.getElementById('persona')?.value || '';
+    const track = DEMO_BANK[persona] || GENERIC_DEMO_TRACK;
+    
+    // history.length is the NEXT question index (1-based after first push)
+    // DEMO_BANK[0] is Q2 (since firstQ from PERSONAS is Q1)
+    const nextIndex = history.length - 1;
+    
+    if(nextIndex >= 0 && nextIndex < track.length) { 
+        currentQ = track[nextIndex]; 
+    } else { 
+        // Wrap gracefully at end of bank
+        currentQ = track[track.length - 1] || GENERIC_DEMO_TRACK[0];
+    }
+    
+    const loader = document.getElementById('loader');
+    if(loader) loader.classList.remove('on');
+    renderUI();
+}
+
+async function fetchNext(){
+  const ind=document.getElementById('ind')?.value || '';
+  const persona=document.getElementById('persona')?.value || '';
+  const comp=document.getElementById('comp')?.value || '';
+  const vertCtx=VERTICALS[ind]||'General enterprise.';
+  const personaCtx=persona&&PERSONAS[persona]?`\nPERSONA ANGLE: ${PERSONAS[persona].angle}`:'';
+  const histStr=history.map((h,i)=>`Q${i+1} [${h.cat}]: ${h.q}\nAnswer: ${h.answerText}\nNotes: ${h.notes||'None'}`).join('\n\n');
+  const prompt=`You are a Senior Enterprise Sales Architect at our MSP, coaching a rep through a live SASE discovery call.
+
+DEAL CONTEXT:
+${getCtxBlock()}
+
+VERTICAL KNOWLEDGE:
+${vertCtx}
+${personaCtx}
+${comp?`\nCOMPETITOR IN PLAY: ${comp} — weave in discovery that naturally surfaces their weaknesses.`:''}
+
+DISCOVERY HISTORY:
+${histStr}
+
+TASK: Generate the single best next discovery question for MSP Managed SASE (SD-WAN, ZTNA, SWG, CASB, Managed SOC).
+Rules: 
+- Do NOT repeat a category already covered. 
+- Build directly on pain points revealed in the history.
+- Be highly tailored to the Persona and Industry. 
+- Generate exactly 5 realistic answer options and exactly 2 cheat sheet advice cards.`;
+  
+  try{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key='+gkey,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{
+          temperature:.72,
+          maxOutputTokens:1024,
+          responseMimeType:"application/json",
+          responseSchema:{
+            type:"OBJECT",
+            properties:{
+              cat:{type:"STRING"},
+              q:{type:"STRING"},
+              opts:{type:"ARRAY",description:"Exactly 5 options",items:{type:"OBJECT",properties:{text:{type:"STRING"},badge:{type:"STRING",description:"one of: risk, legacy, mature, driver, pivot, pain"},val:{type:"STRING"}},required:["text","badge","val"]}},
+              cs:{type:"ARRAY",description:"Exactly 2 cheat sheet items",items:{type:"OBJECT",properties:{type:{type:"STRING",description:"one of: t-ac, t-am, t-pu, t-gn, t-cy, t-rd"},title:{type:"STRING"},body:{type:"STRING"}},required:["type","title","body"]}}
+            },
+            required:["cat","q","opts","cs"]
+          }
+        }
+      })
+    });
+    
+    if(!res.ok)throw new Error('API Error '+res.status);
+    const data=await res.json();
+    currentQ=JSON.parse(data.candidates[0].content.parts[0].text);
+    const loader = document.getElementById('loader');
+    if(loader) loader.classList.remove('on');
+    renderUI();
+  }catch(e){
+    const loader = document.getElementById('loader');
+    if(loader) loader.classList.remove('on');
+    history.pop();
+    alert('AI Error: '+e.message+'\n\nCheck your Gemini API key and try again.');
+  }
+}
+
+function buildSummaryTable(){
+  const tbody=document.getElementById('summaryBody');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  history.forEach((item,i)=>{
+    const tr=document.createElement('tr');
+    if(i%2===0) tr.className='ds-row-even';
+    tr.innerHTML=`
+      <td class="td-q" style="font-family:var(--fc);font-size:12px;color:var(--ac);text-align:center;font-weight:700">${i+1}</td>
+      <td><span class="td-cat">${item.cat}</span></td>
+      <td class="td-q">${item.q}</td>
+      <td class="td-ans">${item.answerText}</td>
+      <td class="td-notes">${item.notes||'—'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function goReport(){
+  const name=document.getElementById('pName')?.value || '';
+  const persona=document.getElementById('persona')?.value || '';
+  const p=persona&&PERSONAS[persona]?` · ${PERSONAS[persona].icon} ${persona}`:'';
+  
+  const rvSub = document.getElementById('rvSub');
+  if(rvSub) rvSub.textContent=`${name||'Prospect'}${p} · ${history.length} discovery questions completed`;
+  
+  const pDate = document.getElementById('printDate');
+  if(pDate) pDate.textContent=`Generated: ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`;
+  
+  buildSummaryTable();
+  
+  const appLayout = document.getElementById('appLayout');
+  const reportView = document.getElementById('reportView');
+  if(appLayout) appLayout.style.display='none';
+  if(reportView) reportView.classList.add('show');
+}
+
+function backToWiz(){
+  const reportView = document.getElementById('reportView');
+  const appLayout = document.getElementById('appLayout');
+  if(reportView) reportView.classList.remove('show');
+  if(appLayout) appLayout.style.display='grid';
+}
+
+async function generateReport(){
+  const isDemoMode = !gkey;
+  
+  if(!gkey && !isDemoMode){showModal();return;}
+  
+  const btn=document.getElementById('genBtn');
+  const box=document.getElementById('reportBox');
+  if(btn) {
+      btn.disabled=true;
+      btn.innerHTML='<div class="spin" style="width:16px;height:16px;border-width:2px;margin:0 8px 0 0;display:inline-block;vertical-align:middle;border-top-color:#fff"></div>Building Strategy Brief…';
+  }
+  
+  if(isDemoMode) {
+      await generateDemoReport(box, btn);
+  } else {
+      await fetchReportAI(box, btn);
+  }
+}
+
+async function generateDemoReport(box, btn) {
+    await new Promise(r => setTimeout(r, 1500)); 
+    
+    const company = document.getElementById('pName')?.value || 'The Prospect';
+    const ind = document.getElementById('ind')?.value || '';
+    const indText = ind && ind !== 'Select...' && ind !== 'General Enterprise' ? ind : 'enterprise';
+    const persona = document.getElementById('persona')?.value || 'Executive';
+    const comp = document.getElementById('comp')?.value || '';
+    
+    const primaryPain = history.length > 0 ? history[0].answerText : 'legacy network constraints';
+    const secondaryPain = history.length > 1 ? history[1].answerText : 'security visibility gaps';
+    
+    let html = `
+    <h3>1. Current State Assessment</h3>
+    <p>Based on our discovery conversation, <strong>${company}</strong> is facing significant challenges with its current architecture in the ${indText} sector. You identified that you are currently dealing with <strong>"${primaryPain}"</strong>, which is compounded by <strong>"${secondaryPain}"</strong>. This fragmented approach to network and security is creating operational drag and expanding your attack surface.</p>
+    
+    <h3>2. The Business Driver for the ${persona}</h3>
+    <p>For a ${persona}, the status quo is no longer commercially or operationally viable. The reliance on disjointed point products is preventing your team from scaling securely. By modernising this architecture, you can reduce the mean-time-to-resolution (MTTR) for incidents, accelerate cloud onboarding, and shift unpredictable CapEx into a manageable OpEx model.</p>
+    
+    <h3>3. Recommended MSP SASE Architecture</h3>
+    <p>We recommend transitioning to a <strong>Unified Managed SASE architecture</strong>. Specifically:</p>
+    <ul>
+        <li><strong>SD-WAN Underlay/Overlay:</strong> To solve the latency and routing issues, ensuring predictable QoS for critical applications.</li>
+        <li><strong>Zero Trust Network Access (ZTNA):</strong> To replace legacy VPNs and prevent lateral movement if a remote endpoint is compromised.</li>
+        <li><strong>Cloud Secure Web Gateway (SWG):</strong> To push security inspection to the edge, rather than backhauling traffic to physical data centres.</li>
+    </ul>
+    
+    <h3>4. Why MSP Managed Services</h3>
+    <p>Technology alone will not solve the operational burden your team is facing. <strong>MSP Managed SASE</strong> wraps the technology in a 24/7 global NOC and SOC. We take absolute accountability for the SLA from the physical underlay circuit through to the application-layer security policy. This allows your senior engineers to stop chasing alerts and start driving strategic value.</p>
+    `;
+    
+    if (comp && comp !== 'None yet') {
+        html += `
+        <h3>5. Why MSP Over ${comp}</h3>
+        <p>While ${comp} is a recognised vendor, they only provide a piece of the puzzle. They do not own the global network underlay, and they typically do not provide a genuine, end-to-end managed SOC. MSP offers a single contract and a single throat to choke, eliminating the vendor finger-pointing that occurs when the overlay and underlay are disjointed.</p>
+        `;
+    }
+    
+    if(box) {
+        const div=document.createElement('div');
+        div.className='ai-box';
+        div.innerHTML=html;
+        box.innerHTML='';
+        box.appendChild(div);
+    }
+    
+    const genWrap = document.getElementById('genWrapDiv');
+    const pdf1 = document.getElementById('btnPdf1');
+    
+    if(genWrap) genWrap.style.display = 'none';
+    if(pdf1) pdf1.style.display = 'inline-flex';
+}
+
+async function fetchReportAI(box, btn) {
+  const ind=document.getElementById('ind')?.value || '';
+  const persona=document.getElementById('persona')?.value || '';
+  const comp=document.getElementById('comp')?.value || '';
+  const histStr=history.map((h,i)=>`Q${i+1} [${h.cat}]: ${h.q}\nPROSPECT SAID: ${h.answerText}\nREP NOTES: ${h.notes||'None'}`).join('\n\n---\n\n');
+  const personaCtx=persona&&PERSONAS[persona]?`\nPERSONA: ${persona}. Angle: ${PERSONAS[persona].angle}`:'';
+  
+  const prompt=`You are a Senior Network & Security Architect at our MSP. Write a compelling executive-grade "MSP Managed SASE Strategy Brief" for this account.
+
+DEAL CONTEXT:
+${getCtxBlock()}
+VERTICAL CONTEXT: ${VERTICALS[ind]||'General enterprise'}
+${personaCtx}
+${comp?`COMPETITOR IN PLAY: ${comp} — briefly address why MSP is superior without aggression.`:''}
+
+DISCOVERY ANSWERS:
+${histStr}
+
+Format output as clean HTML using ONLY <h3>, <ul>, <li>, <p>, <strong>. No markdown, no code blocks.
+
+Structure:
+<h3>1. Current State Assessment</h3> (specific to their discovery answers — name their actual pain points)
+<h3>2. The Business Driver for the ${persona||'Executive'}</h3> (why they need to act — reference their industry, persona priorities, and key pain)
+<h3>3. Recommended MSP SASE Architecture</h3> (specific components: SD-WAN / ZTNA / SWG / CASB / Managed SOC — each mapped to a specific pain from their answers)
+<h3>4. Why MSP Managed Services</h3> (operational and commercial case specific to this customer)
+${comp?`<h3>5. Why MSP Over ${comp}</h3> (specific, factual differentiation based on their context)`:''}
+
+Be specific and executive-ready. Every claim must map to their discovery answers.`;
+
+  try{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key='+gkey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.35,maxOutputTokens:2000}})});
+    if(!res.ok)throw new Error('API Error '+res.status);
+    const data=await res.json();
+    const raw=data.candidates[0].content.parts[0].text;
+    
+    if(box) {
+        const div=document.createElement('div');
+        div.className='ai-box';
+        div.innerHTML=raw.replace(/```html\n?/g,'').replace(/```\n?/g,'').trim();
+        box.innerHTML='';
+        box.appendChild(div);
+    }
+    
+    const genWrap = document.getElementById('genWrapDiv');
+    const pdf1 = document.getElementById('btnPdf1');
+    
+    if(genWrap) genWrap.style.display = 'none';
+    if(pdf1) pdf1.style.display = 'inline-flex';
+  }catch(e){
+    if(box) box.innerHTML=`<p style="color:var(--rd);text-align:center;padding:20px"><strong>Error:</strong> ${e.message}<br><br>Check your Gemini API key and try again.</p>`;
+    if(btn) {
+        btn.innerHTML='⚡ Try Again'; 
+        btn.disabled=false;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════
+   PDF EXPORT
+═══════════════════════════════════════ */
+function exportPDF(){
+  const name=document.getElementById('pName')?.value||'SASE Discovery';
+  document.title=`MSP SASE Strategy — ${name}`;
+  window.print();
+}
+
+/* ═══════════════════════════════════════
+   UTILS & INITIALIZATION
+═══════════════════════════════════════ */
+function toggleTheme(){
+  const l=document.body.classList.toggle('lm');
+  localStorage.setItem('bt-theme',l?'light':'dark');
+  const tBtn = document.getElementById('themeBtn');
+  if(tBtn) tBtn.textContent=l?'🌙 Dark Mode':'☀ Light Mode';
+}
+
+function showModal(){
+    const hub = document.getElementById('welcomeHub');
+    if(hub) { hub.classList.remove('hidden'); hub.style.display='flex'; }
+}
+
+function bypassKey(){
+  sessionStorage.setItem('bt-demo', 'true');
+  const hub = document.getElementById('welcomeHub');
+  const dot = document.getElementById('aiDot');
+  const status = document.getElementById('aiStatus');
+  
+  if(hub) { hub.classList.add('hidden'); hub.style.display='none'; }
+  if(dot) dot.style.cssText='background:var(--am);box-shadow:0 0 8px var(--am)';
+  if(status) status.textContent='Demo Mode — Pre-scripted';
+}
+
+function saveKey(){
+  const apiKeyInput = document.getElementById('apiKey');
+  if(!apiKeyInput) return;
+  
+  const k=apiKeyInput.value.trim();
+  if(!k){alert('Please enter a valid API key.');return;}
+  gkey=k; 
+  sessionStorage.setItem('bt-gk',k);
+  sessionStorage.removeItem('bt-demo');
+  
+  const hub = document.getElementById('welcomeHub');
+  const dot = document.getElementById('aiDot');
+  const status = document.getElementById('aiStatus');
+  
+  if(hub) { hub.classList.add('hidden'); hub.style.display='none'; }
+  if(dot) dot.style.cssText='background:var(--gn);box-shadow:0 0 10px var(--gn)';
+  if(status) status.textContent='AI Engine Active';
+}
+
+// Ensure DOM is fully loaded before executing initialization
+document.addEventListener('DOMContentLoaded', () => {
+  const k=sessionStorage.getItem('bt-gk');
+  const d=sessionStorage.getItem('bt-demo');
+  
+  const hub = document.getElementById('welcomeHub');
+  const dot = document.getElementById('aiDot');
+  const status = document.getElementById('aiStatus');
+  
+  if(k){
+    gkey=k;
+    if(hub) { hub.classList.add('hidden'); hub.style.display='none'; }
+    if(dot) dot.style.cssText='background:var(--gn);box-shadow:0 0 10px var(--gn)';
+    if(status) status.textContent='AI Engine Active';
+  } else if(d){
+    if(hub) { hub.classList.add('hidden'); hub.style.display='none'; }
+    if(dot) dot.style.cssText='background:var(--am);box-shadow:0 0 8px var(--am)';
+    if(status) status.textContent='Demo Mode — Pre-scripted';
+  } else {
+    // Show welcome hub — remove hidden class, set display
+    if(hub) { hub.classList.remove('hidden'); hub.style.display='flex'; }
+  }
+  
+  if(localStorage.getItem('bt-theme')==='light'){
+      document.body.classList.add('lm');
+      const tBtn = document.getElementById('themeBtn');
+      if(tBtn) tBtn.textContent='🌙 Dark Mode';
+  }
+});
+</script>
+</body>
+</html>
